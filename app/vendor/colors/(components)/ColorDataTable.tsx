@@ -8,10 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-// import CategoryCreateSheet from "./CategoryCreateSheet";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import ColorCreateSheet from "./ColorCreateSheet";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { MoreHorizontal } from "lucide-react";
 
 // export type Payment = {
 //   id: string;
@@ -46,6 +48,25 @@ export default function ColorDataTable({ setCurrentColorId }: any) {
   }, [refreshNow, setCurrentColorId]);
 
   console.log(colors);
+
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const handleDelete = async (id: number) => {
+    try {
+      setIsDeleting(true);
+      const { error, data, status } = await supabase.from("Color").delete().eq("id", id);
+
+      if (error || status !== 204) {
+        throw new Error("Failed to delete color");
+      }
+
+      setRefreshNow(true);
+      toast.success(isDeleting ? "Color deleting" : "Color deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete color");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   //   const columns: ColumnDef<Payment>[] = [
   const columns: ColumnDef<any>[] = [
@@ -85,13 +106,10 @@ export default function ColorDataTable({ setCurrentColorId }: any) {
     },
 
     {
-        accessorKey: "hex",
-        header: "Color Hex",
-        cell: ({ row }) => (
-          <div className="capitalize">{row.getValue("hex")}</div>
-        ),
-      },
-
+      accessorKey: "hex",
+      header: "Color Hex",
+      cell: ({ row }) => <div className="capitalize">{row.getValue("hex")}</div>,
+    },
 
     {
       accessorKey: "hex",
@@ -101,6 +119,55 @@ export default function ColorDataTable({ setCurrentColorId }: any) {
           <div
             className=" w-16 h-4 rounded-full"
             style={{ backgroundColor: row.getValue("hex") }}></div>
+        );
+      },
+    },
+
+    {
+      id: "actions",
+      header: "Actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const item = row.original;
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              {/* <CategoryEditDialog
+              id={item.id}
+              setRefreshNow={setRefreshNow}
+            /> */}
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete color</span>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>This action cannot be undone. This will permanently delete your data and remove your data from our servers.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className=" bg-red-500/90 hover:bg-red-500"
+                      onClick={() => handleDelete(item.id)}>
+                      Continue
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },

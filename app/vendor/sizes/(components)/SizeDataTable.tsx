@@ -8,12 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-// import CategoryCreateSheet from "./CategoryCreateSheet";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import SizeCreateSheet from "./SizeCreateSheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 
 // export type Payment = {
 //   id: string;
@@ -48,6 +48,25 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
   }, [refreshNow, setCurrentSizeId]);
 
   console.log(sizes);
+
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const handleDelete = async (id: number) => {
+    try {
+      setIsDeleting(true);
+      const { error, data, status } = await supabase.from("Size").delete().eq("id", id);
+
+      if (error || status !== 204) {
+        throw new Error("Failed to delete size");
+      }
+
+      setRefreshNow(true);
+      toast.success(isDeleting ? "Size deleting" : "Size deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete size");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   //   const columns: ColumnDef<Payment>[] = [
   const columns: ColumnDef<any>[] = [
@@ -94,38 +113,49 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
 
     {
       id: "actions",
-      // header: "Actions",
+      header: "Actions",
       enableHiding: false,
       cell: ({ row }) => {
-        // const item = row.original;
-        // console.log(item)
+        const item = row.original;
 
         return (
-         <div>
-           <AlertDialog>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              {/* <CategoryEditDialog
+              id={item.id}
+              setRefreshNow={setRefreshNow}
+            /> */}
+
+              <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button>
-                    Delete
-                  </Button>
-                  {/* <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete category</span> */}
+                  <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete size</span>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</AlertDialogDescription>
+                    <AlertDialogDescription>This action cannot be undone. This will permanently delete your data and remove your data from our servers.</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       className=" bg-red-500/90 hover:bg-red-500"
-                      // onClick={() => deleteCatgory(item.id)}
-                    >
+                      onClick={() => handleDelete(item.id)}>
                       Continue
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-         </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },
@@ -205,10 +235,6 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
-                  // onClick={() => row.toggleSelected()}
-                  onClick={() => {
-                    setCurrentSizeId(row.original.id);
-                  }}
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
