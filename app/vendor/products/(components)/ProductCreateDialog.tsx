@@ -112,7 +112,7 @@ export default function ProductCreateDialog({ setRefreshNow }: Props) {
                     <div className=" flex items-center  gap-2">
                       <Input
                         type="file"
-                        onChange={(event) => handleFileUpload(event.target.files?.[0], setImageUrl)}
+                        // onChange={(event) => handleFileUpload(event.target.files?.[0], setImageUrl)}
                       />
 
                       <>

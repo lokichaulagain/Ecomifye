@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 //   email: string;
 // };
 
-export default function CategoryDataTable() {
+export default function CategoryDataTable({ setCurrentCategoryId }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -30,15 +30,19 @@ export default function CategoryDataTable() {
   React.useEffect(() => {
     const fetch = async () => {
       let { data, error } = await supabase.from("Category").select("*");
+
       if (error) {
         throw new Error("Failed to fetch categories");
       }
 
-      setCategories(data || []);
-      setRefreshNow(false);
+      if (data) {
+        setCategories(data || []);
+        setRefreshNow(false);
+        setCurrentCategoryId(data[0]?.id);
+      }
     };
     fetch();
-  }, [refreshNow]);
+  }, [refreshNow, setCurrentCategoryId]);
 
   console.log(categories);
 
@@ -63,11 +67,7 @@ export default function CategoryDataTable() {
       enableSorting: false,
       enableHiding: false,
     },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("status")}</div>,
-    },
+
     {
       accessorKey: "name",
       header: ({ column }) => {
@@ -83,62 +83,17 @@ export default function CategoryDataTable() {
       cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
     },
 
-    // badge for status
     {
       accessorKey: "isActive",
       header: "Active Status",
       cell: ({ row }) => {
         const status = row.getValue("isActive");
-
         return (
           <Badge
             className={`
             ${status ? " bg-green-500/20 text-green-800 hover:bg-green-500/20 hover:text-green-800" : "bg-destructive/20 bg-opacity-10 text-destructive   hover:bg-destructive/20 hover:bg-opacity-10 hover:text-destructive"} rounded-full `}>
             {row.getValue("isActive") ? "Active" : "Inactive"}
           </Badge>
-        );
-      },
-    },
-
-    {
-      accessorKey: "amount",
-      header: () => <div className="text-right">Amount</div>,
-      cell: ({ row }) => {
-        const amount = parseFloat(row.getValue("amount"));
-
-        // Format the amount as a dollar amount
-        const formatted = new Intl.NumberFormat("en-US", {
-          style: "currency",
-          currency: "USD",
-        }).format(amount);
-
-        return <div className="text-right font-medium">{formatted}</div>;
-      },
-    },
-    {
-      id: "actions",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const payment = row.original;
-
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <DotsHorizontalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(payment.id)}>Copy payment ID</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>View customer</DropdownMenuItem>
-              <DropdownMenuItem>View payment details</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         );
       },
     },
@@ -167,9 +122,9 @@ export default function CategoryDataTable() {
     <div className="w-full">
       <div className="flex items-center justify-between py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("email")?.setFilterValue(event.target.value)}
+          placeholder="Filter names..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
         <DropdownMenu>
@@ -218,6 +173,10 @@ export default function CategoryDataTable() {
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
+                  // onClick={() => row.toggleSelected()}
+                  onClick={() => {
+                    setCurrentCategoryId(row.original.id);
+                  }}
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (

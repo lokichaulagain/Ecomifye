@@ -3,39 +3,39 @@ import { NextResponse } from "next/server";
 import axios from "axios";
 
 const vercelToken = "7Gl6hTJtBBdEc44Yzvbja1mM";
-export async function POST(request: NextApiRequest, response: NextResponse) {
-  try {
-    const requestBody = {
-      gitSource: {
-        ref: "master",
-        repoId: "790806378",
-        type: "github",
-        sha: "d0856f6",
-      },
-      name: "propello-morning-test2",
-      deploymentId:"prj_4MO1vaP0klYgNDMwu0t8j8XE5gKt", // only to redeploy
+// export async function POST(request: NextApiRequest, response: NextResponse) {
+//   try {
+//     const requestBody = {
+//       gitSource: {
+//         ref: "master",
+//         repoId: "790806378",
+//         type: "github",
+//         sha: "d0856f6",
+//       },
+//       name: "propello-morning-test2",
+//       deploymentId:"prj_4MO1vaP0klYgNDMwu0t8j8XE5gKt", // only to redeploy
 
-      projectSettings: {
-        framework: "nextjs",
-      },
-      gitMetadata: {
-        remoteUrl: "https://github.com/lokichaulagain/propello-storefront",
-      },
-    };
+//       projectSettings: {
+//         framework: "nextjs",
+//       },
+//       gitMetadata: {
+//         remoteUrl: "https://github.com/lokichaulagain/propello-storefront",
+//       },
+//     };
 
-    const response = await axios.post("https://api.vercel.com/v13/deployments", requestBody, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${vercelToken}`,
-      },
-    });
+//     const response = await axios.post("https://api.vercel.com/v13/deployments", requestBody, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${vercelToken}`,
+//       },
+//     });
 
-    // const res = await axios.get("https://jsonplaceholder.typicode.com/users ");
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json(error, { status: 500 });
-  }
-}
+//     // const res = await axios.get("https://jsonplaceholder.typicode.com/users ");
+//     return NextResponse.json(response.data, { status: 200 });
+//   } catch (error: any) {
+//     return NextResponse.json(error, { status: 500 });
+//   }
+// }
 
 // export async function POST(request: any, response: any) {
 //   try {

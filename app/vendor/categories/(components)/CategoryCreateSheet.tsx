@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -29,7 +29,7 @@ const formSchema = z.object({
   }),
 });
 
-export default function CategoryCreateSheet() {
+export default function CategoryCreateSheet({ category }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,6 +38,8 @@ export default function CategoryCreateSheet() {
       isActive: "",
     },
   });
+
+  console.log(category);
 
   // Define a submit handler
   const { uploading, handleFileUpload, imageUrl } = useCloudinaryFileUpload();
