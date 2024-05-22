@@ -11,6 +11,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname } from "next/navigation";
+import { IconSize } from "@/components/custom/svg-icons/IconSize";
+import { IconColor } from "@/components/custom/svg-icons/IconColor";
+import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
+import { IconAnalytic } from "@/components/custom/svg-icons/IconAnalytic";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,10 +26,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link
-              href="/"
+              href="/vendor"
               className="flex items-center gap-2 font-semibold">
               <Package2 className="h-6 w-6" />
-              <span className="">Acme Inc</span>
+              <span className="">Ecomify Inc</span>
             </Link>
             <Button
               variant="outline"
@@ -155,11 +159,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 const menuItems = [
-  { href: "#", icon: <Home className="h-5 w-5" />, label: "Dashboard", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/vendor", icon: <Home className="h-5 w-5" />, label: "Dashboard", extraClasses: "text-muted-foreground hover:text-foreground" },
   { href: "/vendor/orders", icon: <ShoppingCart className="h-5 w-5" />, label: "Orders", extraClasses: "bg-muted text-foreground hover:text-foreground", badge: 6 },
   { href: "/vendor/products", icon: <Package className="h-5 w-5" />, label: "Products", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "#", icon: <Users className="h-5 w-5" />, label: "Customers", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "#", icon: <LineChart className="h-5 w-5" />, label: "Analytics", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/categories", icon: <LineChart className="h-5 w-5" />, label: "Categories", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/colors", icon: <LineChart className="h-5 w-5" />, label: "Colors", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/vendor/customers", icon: <Users className="h-5 w-5" />, label: "Customers", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/vendor/categories", icon: <IconCategory className="h-5 w-5" />, label: "Categories", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/vendor/colors", icon: <IconColor className="h-5 w-5" />, label: "Colors", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/vendor/sizes", icon: <IconSize className="h-5 w-5" />, label: "Sizes", extraClasses: "text-muted-foreground hover:text-foreground" },
 ];

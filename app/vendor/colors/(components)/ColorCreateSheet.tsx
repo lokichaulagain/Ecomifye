@@ -63,7 +63,7 @@ export default function ColorCreateSheet({ color }: any) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent>
+      <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
           <SheetTitle>Create Color</SheetTitle>
           <SheetDescription>Insert necessary data and click create color when youre done.</SheetDescription>

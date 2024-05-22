@@ -12,7 +12,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "sonner";
 
 const formSchema = z.object({
-  name: z.string().min(31, {
+  name: z.string().min(1, {
     message: "Size must be at least 1 character.",
   }),
 
@@ -61,7 +61,7 @@ export default function SizeCreateSheet({ size }: any) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent>
+      <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
           <SheetTitle>Create Size</SheetTitle>
           <SheetDescription>Insert necessary data and click create size when youre done.</SheetDescription>

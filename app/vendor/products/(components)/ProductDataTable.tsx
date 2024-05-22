@@ -8,12 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-// import CategoryCreateSheet from "./CategoryCreateSheet";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { Badge } from "@/components/ui/badge";
-import SizeCreateSheet from "./SizeCreateSheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MoreHorizontal } from "lucide-react";
+import ProductCreateSheet from "./ProductCreateSheet";
 
 // export type Payment = {
 //   id: string;
@@ -22,32 +19,32 @@ import { MoreHorizontal } from "lucide-react";
 //   email: string;
 // };
 
-export default function SizeDataTable({ setCurrentSizeId }: any) {
+export default function ProductDataTable({ setCurrentProductId }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const [refreshNow, setRefreshNow] = useState(false);
-  const [sizes, setSizes] = React.useState<any[]>([]);
+  const [products, setProducts] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      let { data, error } = await supabase.from("Size").select("*");
+      let { data, error } = await supabase.from("Product").select("*");
 
       if (error) {
-        throw new Error("Failed to fetch sizes");
+        throw new Error("Failed to fetch products");
       }
 
       if (data) {
-        setSizes(data || []);
+        setProducts(data || []);
         setRefreshNow(false);
-        setCurrentSizeId(data[0]?.id);
+        setCurrentProductId(data[0]?.id);
       }
     };
     fetch();
-  }, [refreshNow, setCurrentSizeId]);
+  }, [refreshNow, setCurrentProductId]);
 
-  console.log(sizes);
+  console.log(products);
 
   //   const columns: ColumnDef<Payment>[] = [
   const columns: ColumnDef<any>[] = [
@@ -78,61 +75,34 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Size
+            Product Name
             <CaretSortIcon className="ml-2 h-4 w-4" />
           </Button>
         );
       },
-      cell: ({ row }) => <div className=" ml-2">{row.getValue("name")}</div>,
+      cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
     },
 
-    {
-      accessorKey: "description",
-      header: "Size Description",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("description")}</div>,
-    },
+    
 
     {
-      id: "actions",
-      // header: "Actions",
-      enableHiding: false,
+      accessorKey: "isActive",
+      header: "Active Status",
       cell: ({ row }) => {
-        // const item = row.original;
-        // console.log(item)
-
+        const status = row.getValue("isActive");
         return (
-         <div>
-           <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button>
-                    Delete
-                  </Button>
-                  {/* <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete category</span> */}
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>This action cannot be undone. This will permanently delete your account and remove your data from our servers.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className=" bg-red-500/90 hover:bg-red-500"
-                      // onClick={() => deleteCatgory(item.id)}
-                    >
-                      Continue
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-         </div>
+          <Badge
+            className={`
+            ${status ? " bg-green-500/20 text-green-800 hover:bg-green-500/20 hover:text-green-800" : "bg-destructive/20 bg-opacity-10 text-destructive   hover:bg-destructive/20 hover:bg-opacity-10 hover:text-destructive"} rounded-full `}>
+            {row.getValue("isActive") ? "Active" : "Inactive"}
+          </Badge>
         );
       },
     },
   ];
 
   const table = useReactTable({
-    data: sizes,
+    data: products,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -161,7 +131,7 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
         />
         <DropdownMenu>
           <div className=" flex items-center gap-4">
-            <SizeCreateSheet />
+            <ProductCreateSheet />
 
             <DropdownMenuTrigger asChild>
               <Button
@@ -207,7 +177,7 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
                 <TableRow
                   // onClick={() => row.toggleSelected()}
                   onClick={() => {
-                    setCurrentSizeId(row.original.id);
+                    setCurrentProductId(row.original.id);
                   }}
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}>

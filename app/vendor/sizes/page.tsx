@@ -9,16 +9,15 @@ import moment from "moment";
 
 import { supabase } from "@/utils/supabase/supabaseClient";
 import Image from "next/image";
-import ColorDataTable from "./(components)/SizeDataTable";
+import SizeDataTable from "./(components)/SizeDataTable";
 type Props = {};
 
 export default function Page({}: Props) {
-  const [currentColorId, setCurrentColorId] = useState<any>();
+  const [currentSizeId, setCurrentSizeId] = useState<any>();
 
   return (
     <div className="w-full">
-        <ColorDataTable setCurrentColorId={setCurrentColorId} />
-    
+      <SizeDataTable setCurrentSizeId={setCurrentSizeId} />
     </div>
   );
 }

@@ -85,7 +85,7 @@ export default function CategoryCreateSheet({ category }: any) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent>
+      <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
           <SheetTitle>Create Category</SheetTitle>
           <SheetDescription>Insert necessary data and click create category when youre done.</SheetDescription>
