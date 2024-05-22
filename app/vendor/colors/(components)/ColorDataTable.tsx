@@ -8,9 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import CategoryCreateSheet from "./CategoryCreateSheet";
+// import CategoryCreateSheet from "./CategoryCreateSheet";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { Badge } from "@/components/ui/badge";
+import ColorCreateSheet from "./ColorCreateSheet";
 
 // export type Payment = {
 //   id: string;
@@ -19,32 +20,32 @@ import { Badge } from "@/components/ui/badge";
 //   email: string;
 // };
 
-export default function CategoryDataTable({ setCurrentCategoryId }: any) {
+export default function ColorDataTable({ setCurrentColorId }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const [refreshNow, setRefreshNow] = useState(false);
-  const [categories, setCategories] = React.useState<any[]>([]);
+  const [colors, setColors] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      let { data, error } = await supabase.from("Category").select("*");
+      let { data, error } = await supabase.from("Color").select("*");
 
       if (error) {
-        throw new Error("Failed to fetch categories");
+        throw new Error("Failed to fetch colors");
       }
 
       if (data) {
-        setCategories(data || []);
+        setColors(data || []);
         setRefreshNow(false);
-        setCurrentCategoryId(data[0]?.id);
+        setCurrentColorId(data[0]?.id);
       }
     };
     fetch();
-  }, [refreshNow, setCurrentCategoryId]);
+  }, [refreshNow, setCurrentColorId]);
 
-  console.log(categories);
+  console.log(colors);
 
   //   const columns: ColumnDef<Payment>[] = [
   const columns: ColumnDef<any>[] = [
@@ -75,34 +76,38 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Category Name
+            Color Name
             <CaretSortIcon className="ml-2 h-4 w-4" />
           </Button>
         );
       },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
+      cell: ({ row }) => <div className=" ml-2">{row.getValue("name")}</div>,
     },
 
-    
+    {
+        accessorKey: "hex",
+        header: "Color Hex",
+        cell: ({ row }) => (
+          <div className="capitalize">{row.getValue("hex")}</div>
+        ),
+      },
+
 
     {
-      accessorKey: "isActive",
-      header: "Active Status",
+      accessorKey: "hex",
+      header: "Color Preview",
       cell: ({ row }) => {
-        const status = row.getValue("isActive");
         return (
-          <Badge
-            className={`
-            ${status ? " bg-green-500/20 text-green-800 hover:bg-green-500/20 hover:text-green-800" : "bg-destructive/20 bg-opacity-10 text-destructive   hover:bg-destructive/20 hover:bg-opacity-10 hover:text-destructive"} rounded-full `}>
-            {row.getValue("isActive") ? "Active" : "Inactive"}
-          </Badge>
+          <div
+            className=" w-16 h-4 rounded-full"
+            style={{ backgroundColor: row.getValue("hex") }}></div>
         );
       },
     },
   ];
 
   const table = useReactTable({
-    data: categories,
+    data: colors,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -131,7 +136,7 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
         />
         <DropdownMenu>
           <div className=" flex items-center gap-4">
-            <CategoryCreateSheet />
+            <ColorCreateSheet />
 
             <DropdownMenuTrigger asChild>
               <Button
@@ -177,7 +182,7 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
                 <TableRow
                   // onClick={() => row.toggleSelected()}
                   onClick={() => {
-                    setCurrentCategoryId(row.original.id);
+                    setCurrentColorId(row.original.id);
                   }}
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}>
