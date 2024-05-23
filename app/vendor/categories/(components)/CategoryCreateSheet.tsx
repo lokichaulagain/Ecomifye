@@ -29,7 +29,7 @@ const formSchema = z.object({
   }),
 });
 
-export default function CategoryCreateSheet({ category }: any) {
+export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,6 +68,7 @@ export default function CategoryCreateSheet({ category }: any) {
       form.reset();
       setPreviewUrl("");
       setIsCreating(false);
+      // setRefreshNow(true);
       toast.success("Category created successfully");
       return;
     }

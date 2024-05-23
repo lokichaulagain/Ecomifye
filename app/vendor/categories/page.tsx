@@ -9,7 +9,6 @@ import moment from "moment";
 import CategoryDataTable from "./(components)/CategoryDataTable";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import Image from "next/image";
-import CategoryCreateSheet from "./(components)/CategoryCreateSheet";
 type Props = {};
 
 export default function Page({}: Props) {
@@ -17,13 +16,13 @@ export default function Page({}: Props) {
 
   return (
     <div className=" w-full flex flex-col xl:flex-row gap-8 lg:gap-4">
-      <div className="w-full lg:w-8/12">
-        <CategoryDataTable setCurrentCategoryId={setCurrentCategoryId} />
-      </div>
+      <CategoryDataTable setCurrentCategoryId={setCurrentCategoryId} />
 
-      <div className=" w-full lg:w-4/12">
-        <Component2 id={currentCategoryId} />
-      </div>
+      {currentCategoryId && (
+        <div className=" w-full lg:w-5/12">
+          <Component2 id={currentCategoryId} />
+        </div>
+      )}
     </div>
   );
 }

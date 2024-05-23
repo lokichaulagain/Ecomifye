@@ -21,7 +21,7 @@ const formSchema = z.object({
   }),
 });
 
-export default function ColorCreateSheet({ color }: any) {
+export default function ColorCreateSheet({ color, setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,6 +46,7 @@ export default function ColorCreateSheet({ color }: any) {
     if (status === 201 && data) {
       form.reset();
       setIsCreating(false);
+      setRefreshNow(true);
       toast.success("Color created successfully");
       return;
     }

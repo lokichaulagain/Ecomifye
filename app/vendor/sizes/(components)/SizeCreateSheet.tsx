@@ -19,7 +19,7 @@ const formSchema = z.object({
   description: z.string().optional(),
 });
 
-export default function SizeCreateSheet({ size }: any) {
+export default function SizeCreateSheet({ size,setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -44,6 +44,7 @@ export default function SizeCreateSheet({ size }: any) {
     if (status === 201 && data) {
       form.reset();
       setIsCreating(false);
+      setRefreshNow(true);
       toast.success("Size created successfully");
       return;
     }
