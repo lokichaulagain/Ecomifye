@@ -23,7 +23,7 @@ import EmptyDataSection from "@/components/custom/empty-data-section";
 //   email: string;
 // };
 
-export default function SizeDataTable({ setCurrentSizeId }: any) {
+export default function SizeDataTable({ setCurrentSizeId,user }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -194,7 +194,7 @@ export default function SizeDataTable({ setCurrentSizeId }: any) {
             />
             <DropdownMenu>
               <div className=" flex items-center gap-4">
-                <SizeCreateSheet />
+                <SizeCreateSheet user={user}/>
 
                 <DropdownMenuTrigger asChild>
                   <Button

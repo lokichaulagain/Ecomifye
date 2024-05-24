@@ -6,3 +6,4 @@ const supabaseUrl = "https://fbggruxahrktrgxelttm.supabase.co";
 // not anonymous key
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiZ2dydXhhaHJrdHJneGVsdHRtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcxMzgzOTg0MiwiZXhwIjoyMDI5NDE1ODQyfQ.FCDB5j7LQ4cN3TuOxFw1kPcQSKsDqyQ1Qo6IOq7T1jg";
 export const supabase = createClient(supabaseUrl, supabaseKey);
+

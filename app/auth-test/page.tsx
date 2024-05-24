@@ -33,7 +33,7 @@ export default function page() {
 
   const signUpNewVendor = async () => {
     const { data, error } = await supabase.auth.signUp({
-      email: "vendor4@gmail.com",
+      email: "vendor1@gmail.com",
       password: "Password",
       options: {
         data: { role: "vendor" },

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -19,7 +19,22 @@ const formSchema = z.object({
   description: z.string().optional(),
 });
 
-export default function SizeCreateSheet({ size,setRefreshNow }: any) {
+export default function SizeCreateSheet({ size, setRefreshNow }: any) {
+  const [loggedInUser, setLoggedInUser] = useState<any>();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log(user, "user")
+      // const user = await supabase.auth.getUser();
+      setLoggedInUser(user);
+      // console.log(user);
+    };
+    fetchUser()
+  }, []);
+
+  // console.log(loggedInUser?.data.user, "logged in user");
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,7 +47,10 @@ export default function SizeCreateSheet({ size,setRefreshNow }: any) {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsCreating(true);
-    const { data, error, status } = await supabase.from("Size").insert([values]).select();
+    const { data, error, status } = await supabase
+      .from("Size")
+      .insert([{ ...values, vendor: loggedInUser?.id }])
+      .select();
 
     if (error) {
       toast.error(error.details || "An error occurred during create. Please try again.");
@@ -44,7 +62,7 @@ export default function SizeCreateSheet({ size,setRefreshNow }: any) {
     if (status === 201 && data) {
       form.reset();
       setIsCreating(false);
-      setRefreshNow(true);
+      // setRefreshNow(true);
       toast.success("Size created successfully");
       return;
     }
