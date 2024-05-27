@@ -9,15 +9,30 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { supabase } from "@/utils/supabase/supabaseClient";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
-  email: z.string().min(10, {
-    message: "Email must be at least 10 characters.",
-  }),
+  email: z
+    .string()
+    .min(8, {
+      message: "Vendor email must be at least 8 character.",
+    })
+    .max(40, {
+      message: "Vendor email must be less than 40 characters.",
+    })
+    .email(),
 
-  password: z.string().min(7, {
-    message: "Password must be at least 7 characters.",
-  }),
+  password: z
+    .string()
+    .min(7, {
+      message: "Password must be at least 7 character.",
+    })
+    .max(22, {
+      message: "Password must be less than 22 characters.",
+    }),
 });
 
 export default function Page() {
@@ -29,11 +44,38 @@ export default function Page() {
       password: "",
     },
   });
+  const router = useRouter();
 
-  // 2. Define a submit handler.
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  // Define a submit handler
+  const [isLoging, setILoging] = useState<boolean>(false);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setILoging(true);
     const { data, error } = await supabase.auth.signInWithPassword(values);
-  }
+    if (error) {
+      toast.error(error.message || "An error occurred during create. Please try again.");
+      setILoging(false);
+      return;
+    }
+    console.log(data)
+
+    if (data && data.user.role === "super-admin") {
+      // console.log(data.user.role);
+      form.reset();
+      setILoging(false);
+      toast.success("Hey Chief, Welcome back to the dashboard.");
+      router.push("/super-admin");
+      return;
+    }
+
+    if (data && data.user.user_metadata.role === "vendor") {
+      // console.log(data.user.user_metadata.role);
+      form.reset();
+      setILoging(false);
+      toast.success("Login successful , Welcome back to the dashboard.");
+      router.push("/vendor");
+      return;
+    }
+  };
 
   return (
     <div className="w-full lg:grid  lg:grid-cols-2 h-screen flex items-center justify-center overflow-hidden ">
@@ -84,11 +126,19 @@ export default function Page() {
                   />
 
                   <Button
+                    disabled={isLoging}
                     type="submit"
-                    className="w-full">
+                    className="w-full flex items-center">
+                    {isLoging && (
+                      <Loader
+                        size={16}
+                        className="animate-spin mr-1"
+                      />
+                    )}
                     Login
                   </Button>
                   <Button
+                    type="button"
                     variant="outline"
                     className="w-full">
                     Login with Google

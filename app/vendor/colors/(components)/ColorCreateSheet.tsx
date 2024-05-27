@@ -72,7 +72,7 @@ export default function ColorCreateSheet({ setRefreshNow }: any) {
             size={16}
             className=" mr-1"
           />
-          Add New
+          Add New Color
         </Button>
       </SheetTrigger>
 

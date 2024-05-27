@@ -13,7 +13,7 @@ import { Upload } from "lucide-react";
 import useCloudinaryFileUpload from "@/hooks/useCloudinaryFileUpload";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import Link from "next/link";
 import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
@@ -33,15 +33,18 @@ const formSchema = z.object({
   isActive: z.string().min(1, {
     message: "Active status is required.",
   }),
+
+  // parentCategory: z.string().optional(),
 });
 
-export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
+export default function CategoryCreateSheet({ category, setRefreshNow, categories }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       thumbnail: "",
       isActive: "",
+      // parentCategory: "",
     },
   });
 
@@ -158,6 +161,39 @@ export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
                 </FormItem>
               )}
             />
+
+            {/* <FormField
+              control={form.control}
+              name="parentCategory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parent Category *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={"1"}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select " />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    <SelectGroup>
+                    <SelectLabel>Categories</SelectLabel>
+                      {categories?.map((category: any) => (
+                        <SelectItem
+                          key={category.id}
+                          value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                 
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
 
             <FormField
               control={form.control}

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Bell, CircleUser, Home, Menu, Package, Package2, Search, ShoppingCart, Users } from "lucide-react";
+import { Bell, CircleUser, Home, Menu, Package2, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,28 +8,21 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { usePathname, useRouter } from "next/navigation";
-import { IconSize } from "@/components/custom/svg-icons/IconSize";
-import { IconColor } from "@/components/custom/svg-icons/IconColor";
-import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
+import { IconAnalytic } from "@/components/custom/svg-icons/IconAnalytic";
+import { IconStore } from "@/components/custom/svg-icons/IconStore";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect } from "react";
-import { toast } from "sonner";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  console.log(pathname);
 
   const router = useRouter();
   useEffect(() => {
     const fetchSession = async () => {
       const { data, error } = await supabase.auth.getSession();
+      console.log(data);
 
-      if (error) {
-        toast.error(error.message || "Something went wrong . Please try again.");
-        return;
-      }
-
-      if (data && data.session?.user.user_metadata.role !== "vendor") {
+      if (data && data.session?.user.role !== "super-admin") {
         router.push("/");
         return;
       }
@@ -67,7 +60,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className={`${pathname === item.href ? " bg-muted  text-primary transition-all hover:text-primary" : "   text-muted-foreground transition-all hover:text-primary "} 
                   flex items-center gap-3  px-3 py-2
                   rounded-lg`}>
-                  {/* <ShoppingCart className="h-4 w-4" /> */}
                   {item.icon}
                   {item.label}
                   {item.badge && <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">{item.badge}</Badge>}
@@ -176,11 +168,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 const menuItems = [
-  { href: "/vendor", icon: <Home className="h-5 w-5" />, label: "Dashboard", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/orders", icon: <ShoppingCart className="h-5 w-5" />, label: "Orders", extraClasses: "bg-muted text-foreground hover:text-foreground", badge: 6 },
-  { href: "/vendor/products", icon: <Package className="h-5 w-5" />, label: "Products", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/customers", icon: <Users className="h-5 w-5" />, label: "Customers", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/categories", icon: <IconCategory className="h-5 w-5" />, label: "Categories", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/colors", icon: <IconColor className="h-5 w-5" />, label: "Colors", extraClasses: "text-muted-foreground hover:text-foreground" },
-  { href: "/vendor/sizes", icon: <IconSize className="h-5 w-5" />, label: "Sizes", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/super-admin", icon: <Home className="h-5 w-5" />, label: "Dashboard", extraClasses: "text-muted-foreground hover:text-foreground" },
+  { href: "/super-admin/analytics", icon: <IconAnalytic className="h-5 w-5" />, label: "Analytics", extraClasses: "bg-muted text-foreground hover:text-foreground" },
+  { href: "/super-admin/vendors", icon: <IconStore className="h-5 w-5" />, label: "Vendors", extraClasses: "bg-muted text-foreground hover:text-foreground", badge: 6 },
 ];

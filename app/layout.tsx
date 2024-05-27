@@ -3,8 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "./ThemeProvider";
 import { Toaster } from "sonner";
-import { supabase } from "@/utils/supabase/supabaseClient";
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -13,9 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  // const user = supabase.auth.getUser();
-  // console.log(user);
-
   return (
     <html lang="en">
       <body className={inter.className}>

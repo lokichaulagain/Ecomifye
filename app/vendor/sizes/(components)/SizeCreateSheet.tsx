@@ -85,7 +85,7 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
             size={16}
             className=" mr-1"
           />
-          Add New
+          Add New Size
         </Button>
       </SheetTrigger>
 

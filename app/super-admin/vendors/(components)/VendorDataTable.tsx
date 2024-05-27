@@ -7,33 +7,34 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import CategoryCreateSheet from "./CategoryCreateSheet";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { Badge } from "@/components/ui/badge";
+// import SizeCreateSheet from "./SizeCreateSheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 import { Loader, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import EmptyDataSection from "@/components/custom/empty-data-section";
-import CategoryEditSheet from "./CategoryEditSheet";
+import SizeCreateSheet from "@/app/vendor/sizes/(components)/SizeCreateSheet";
+import VendorCreateSheet from "./VendorCreateSheet";
+// import SizeEditSheet from "./SizeEditSheet";
 
-export default function CategoryDataTable() {
+export default function VendorDataTable({ user }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const [refreshNow, setRefreshNow] = useState(false);
-  const [categories, setCategories] = React.useState<any[]>([]);
+  const [vendors, setVendors] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      let { data, error } = await supabase.from("Category").select("*").order("created_at", { ascending: false })
+      let { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
 
       if (error) {
-        throw new Error("Failed to fetch categories");
+        throw new Error("Failed to fetch vendors");
       }
 
       if (data) {
-        setCategories(data || []);
+        setVendors(data || []);
         setRefreshNow(false);
       }
     };
@@ -46,16 +47,16 @@ export default function CategoryDataTable() {
     try {
       setDeletingId(id);
       setIsDeleting(true);
-      const { error, data, status } = await supabase.from("Category").delete().eq("id", id);
+      const { error, data, status } = await supabase.from("profiles").delete().eq("id", id);
 
       if (error || status !== 204) {
-        throw new Error("Failed to delete category");
+        throw new Error("Failed to delete vendor");
       }
 
       setRefreshNow(true);
-      toast.success(isDeleting ? "Category deleting" : "Category deleted successfully");
+      toast.success(isDeleting ? "Vendor deleting" : "Vendor deleted successfully");
     } catch (error) {
-      toast.error("Failed to delete category");
+      toast.error("Failed to delete vendor");
     } finally {
       setIsDeleting(false);
     }
@@ -83,33 +84,24 @@ export default function CategoryDataTable() {
     },
 
     {
-      accessorKey: "name",
+      accessorKey: "email",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Category Name
+            Vendor Email
             <CaretSortIcon className="ml-2 h-4 w-4" />
           </Button>
         );
       },
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }) => <div className=" ml-2">{row.getValue("email")}</div>,
     },
 
     {
-      accessorKey: "isActive",
-      header: "Active Status",
-      cell: ({ row }) => {
-        const status = row.getValue("isActive");
-        return (
-          <Badge
-            className={`
-            ${status ? " bg-green-500/20 text-green-800 hover:bg-green-500/20 hover:text-green-800" : "bg-destructive/20 bg-opacity-10 text-destructive   hover:bg-destructive/20 hover:bg-opacity-10 hover:text-destructive"} rounded-full `}>
-            {row.getValue("isActive") ? "Active" : "Inactive"}
-          </Badge>
-        );
-      },
+      accessorKey: "role",
+      header: "Vendor Role",
+      cell: ({ row }) => <div>{row.getValue("role")}</div>,
     },
 
     {
@@ -131,15 +123,15 @@ export default function CategoryDataTable() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {/* <CategoryEditDialog
-              id={item.id}
-              setRefreshNow={setRefreshNow}
-            /> */}
-            <CategoryEditSheet id={item.id} setRefreshNow={setRefreshNow} />
+
+              {/* <SizeEditSheet
+                id={item.id}
+                setRefreshNow={setRefreshNow}
+              /> */}
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete Category</span>
+                  <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete size</span>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -164,7 +156,7 @@ export default function CategoryDataTable() {
   ];
 
   const table = useReactTable({
-    data: categories,
+    data: vendors,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -184,7 +176,7 @@ export default function CategoryDataTable() {
 
   return (
     <>
-      {categories.length >= 1 ? (
+      {vendors.length >= 1 ? (
         <div className="w-full">
           <div className="flex items-center justify-between py-4">
             <Input
@@ -195,7 +187,10 @@ export default function CategoryDataTable() {
             />
             <DropdownMenu>
               <div className=" flex items-center gap-4">
-                <CategoryCreateSheet categories={categories} setRefreshNow={setRefreshNow} />
+                <VendorCreateSheet
+                  user={user}
+                  setRefreshNow={setRefreshNow}
+                />
 
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -282,10 +277,10 @@ export default function CategoryDataTable() {
         </div>
       ) : (
         <EmptyDataSection
-          heading="Categories"
-          title="You have no categories"
-          description="Categories need to be created before adding them in product."
-          child={<CategoryCreateSheet setRefreshNow={setRefreshNow} />}
+          heading="vendors"
+          title="You have no vendors"
+          description="vendors need to be created before adding them in product."
+          child={<VendorCreateSheet setRefreshNow={setRefreshNow} />}
         />
       )}
     </>
