@@ -35,9 +35,6 @@ export default function Page() {
     const { data, error } = await supabase.auth.signInWithPassword(values);
   }
 
-  const { user } = supabase.auth.getUser();
-  console.log(user);
-
   return (
     <div className="w-full lg:grid  lg:grid-cols-2 h-screen flex items-center justify-center overflow-hidden ">
       <div className="">

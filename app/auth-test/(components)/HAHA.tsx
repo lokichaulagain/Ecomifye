@@ -1,6 +1,6 @@
 "use server"
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/client";
 
 import React from "react";
 
