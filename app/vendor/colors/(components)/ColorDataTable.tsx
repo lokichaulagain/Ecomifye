@@ -23,17 +23,21 @@ export default function ColorDataTable() {
 
   const [refreshNow, setRefreshNow] = useState(false);
   const [colors, setColors] = React.useState<any[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
   React.useEffect(() => {
     const fetch = async () => {
+      setIsFetching(true);
       let { data, error } = await supabase.from("Color").select("*").order("created_at", { ascending: false });
 
       if (error) {
+        setIsFetching(false);
         throw new Error("Failed to fetch colors");
       }
 
       if (data) {
         setColors(data || []);
         setRefreshNow(false);
+        setIsFetching(false);
       }
     };
     fetch();
@@ -61,6 +65,8 @@ export default function ColorDataTable() {
       setIsDeleting(false);
     }
   };
+
+
 
   const columns: ColumnDef<any>[] = [
     {
@@ -139,7 +145,10 @@ export default function ColorDataTable() {
               id={item.id}
               setRefreshNow={setRefreshNow}
             /> */}
-            <ColorEditSheet id={item.id} setRefreshNow={setRefreshNow} />
+              <ColorEditSheet
+                id={item.id}
+                setRefreshNow={setRefreshNow}
+              />
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -185,6 +194,17 @@ export default function ColorDataTable() {
       rowSelection,
     },
   });
+
+  if (isFetching) {
+    return (
+      <div className=" flex items-center justify-center h-full w-full">
+        <Loader
+          size={16}
+          className="animate-spin"
+        />
+      </div>
+    );
+  }
 
   return (
     <>

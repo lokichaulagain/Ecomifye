@@ -14,6 +14,7 @@ import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import ThemeToggleButton from "@/components/custom/ThemeToggleButton";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -148,6 +149,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </form>
           </div>
+
+          <ThemeToggleButton/>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

@@ -24,17 +24,21 @@ export default function CategoryDataTable() {
 
   const [refreshNow, setRefreshNow] = useState(false);
   const [categories, setCategories] = React.useState<any[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
   React.useEffect(() => {
+    setIsFetching(true);
     const fetch = async () => {
-      let { data, error } = await supabase.from("Category").select("*").order("created_at", { ascending: false })
+      let { data, error } = await supabase.from("Category").select("*").order("created_at", { ascending: false });
 
       if (error) {
         throw new Error("Failed to fetch categories");
+        setIsFetching(false);
       }
 
       if (data) {
         setCategories(data || []);
         setRefreshNow(false);
+        setIsFetching(false);
       }
     };
     fetch();
@@ -135,7 +139,10 @@ export default function CategoryDataTable() {
               id={item.id}
               setRefreshNow={setRefreshNow}
             /> */}
-            <CategoryEditSheet id={item.id} setRefreshNow={setRefreshNow} />
+              <CategoryEditSheet
+                id={item.id}
+                setRefreshNow={setRefreshNow}
+              />
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -182,6 +189,17 @@ export default function CategoryDataTable() {
     },
   });
 
+  if (isFetching) {
+    return (
+      <div className=" flex items-center justify-center h-full w-full">
+        <Loader
+          size={16}
+          className="animate-spin"
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       {categories.length >= 1 ? (
@@ -195,7 +213,10 @@ export default function CategoryDataTable() {
             />
             <DropdownMenu>
               <div className=" flex items-center gap-4">
-                <CategoryCreateSheet categories={categories} setRefreshNow={setRefreshNow} />
+                <CategoryCreateSheet
+                  categories={categories}
+                  setRefreshNow={setRefreshNow}
+                />
 
                 <DropdownMenuTrigger asChild>
                   <Button

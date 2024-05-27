@@ -23,17 +23,21 @@ export default function SizeDataTable({ user }: any) {
 
   const [refreshNow, setRefreshNow] = useState(false);
   const [sizes, setSizes] = React.useState<any[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
   React.useEffect(() => {
     const fetch = async () => {
+      setIsFetching(true);
       let { data, error } = await supabase.from("Size").select("*").order("created_at", { ascending: false });
 
       if (error) {
         throw new Error("Failed to fetch sizes");
+        setIsFetching(false);
       }
 
       if (data) {
         setSizes(data || []);
         setRefreshNow(false);
+        setIsFetching(false);
       }
     };
     fetch();
@@ -171,6 +175,12 @@ export default function SizeDataTable({ user }: any) {
       rowSelection,
     },
   });
+
+  if(isFetching){
+    return <div className=" flex items-center justify-center h-full w-full">
+      <Loader size={16} className="animate-spin" />
+    </div>
+  }
 
   return (
     <>
