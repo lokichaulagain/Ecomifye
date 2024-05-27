@@ -3,25 +3,37 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { CirclePlus, LoaderCircle } from "lucide-react";
+import { CirclePlus, Loader, LoaderCircle, Save } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "sonner";
+import { IconColor } from "@/components/custom/svg-icons/IconColor";
 
 const formSchema = z.object({
-  name: z.string().min(3, {
-    message: "Color name must be at least 3 characters.",
-  }),
+  name: z
+    .string()
+    .min(3, {
+      message: "Color name must be at least 3 characters.",
+    })
+    .max(20, {
+      message: "Size must be less than 20 characters.",
+    }),
 
-  hex: z.string().min(5, {
-    message: "Hex must be at least 5 characters.",
-  }),
+  hex: z
+    .string()
+    .min(7, {
+      message: "Hex must be at least 7 characters.",
+    })
+    .max(7, {
+      message: "Size must be less than 7 characters.",
+    })
+    .optional(),
 });
 
-export default function ColorCreateSheet({ color, setRefreshNow }: any) {
+export default function ColorCreateSheet({ setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -66,7 +78,9 @@ export default function ColorCreateSheet({ color, setRefreshNow }: any) {
 
       <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
-          <SheetTitle>Create Color</SheetTitle>
+          <SheetTitle className=" flex items-center gap-2">
+            Create Color <IconColor className=" h-4 w-4 text-primary" />
+          </SheetTitle>
           <SheetDescription>Insert necessary data and click create color when youre done.</SheetDescription>
         </SheetHeader>
 
@@ -82,7 +96,7 @@ export default function ColorCreateSheet({ color, setRefreshNow }: any) {
                   <FormLabel>Color Name *</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Hats & Caps"
+                      placeholder="Light Blue"
                       {...field}
                     />
                   </FormControl>
@@ -115,10 +129,15 @@ export default function ColorCreateSheet({ color, setRefreshNow }: any) {
               disabled={isCreating}
               className=" float-end"
               type="submit">
-              {isCreating && (
-                <LoaderCircle
+              {isCreating ? (
+                <Loader
                   size={16}
                   className=" animate-spin mr-1 "
+                />
+              ) : (
+                <Save
+                  size={16}
+                  className=" mr-1"
                 />
               )}{" "}
               Create Color

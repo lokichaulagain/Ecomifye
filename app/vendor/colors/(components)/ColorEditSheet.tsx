@@ -3,76 +3,87 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { CirclePlus, Loader, Save } from "lucide-react";
+import { FilePenLine, Loader } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "sonner";
-import { IconSize } from "@/components/custom/svg-icons/IconSize";
+import { IconColor } from "@/components/custom/svg-icons/IconColor";
 
 const formSchema = z.object({
   name: z
     .string()
-    .min(1, {
-      message: "Size must be at least 1 character.",
+    .min(3, {
+      message: "Color name must be at least 3 characters.",
     })
-    .max(40, {
-      message: "Size must be less than 40 characters.",
+    .max(20, {
+      message: "Color must be less than 20 characters.",
     }),
 
-  description: z
+  hex: z
     .string()
-    .max(40, {
-      message: "Size must be less than 40 characters.",
+    .min(7, {
+      message: "Hex must be at least 7 characters.",
+    })
+    .max(7, {
+      message: "Color must be less than 7 characters.",
     })
     .optional(),
 });
 
-export default function SizeCreateSheet({ size, setRefreshNow }: any) {
-  const [loggedInUser, setLoggedInUser] = useState<any>();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      console.log(user, "user");
-      setLoggedInUser(user);
-    };
-    fetchUser();
-  }, []);
-
+export default function ColorEditSheet({ id, setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      description: "",
+      hex: "",
     },
   });
 
+  const [color, setColor] = useState<any>(undefined);
+  useEffect(() => {
+    const fetch = async () => {
+      const { data, error, status } = await supabase.from("Color").select().eq("id", id).single();
+      if (error) {
+        console.error("Failed to fetch color:", error.message);
+        return;
+      }
+
+      if (status === 200 && data) {
+        setColor(data);
+      }
+    };
+    fetch();
+  }, [id]);
+
+  useEffect(() => {
+    if (color) {
+      form.reset({
+        name: color.name || "",
+        hex: color.hex || "",
+      });
+    }
+  }, [form, color]);
+
   // Define a submit handler
-  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsCreating(true);
-    const { data, error, status } = await supabase
-      .from("Size")
-      .insert([{ ...values, vendor: loggedInUser?.id }])
-      .select();
+    setIsUpdating(true);
+    const { data, error, status } = await supabase.from("Color").update(values).eq("id", id);
 
     if (error) {
-      toast.error(error.details || "An error occurred during create. Please try again.");
-      console.error("Failed to create size:", error.message);
-      setIsCreating(false);
+      setIsUpdating(false);
+      toast.error(error.details || "An error occurred during update. Please try again.");
       return;
     }
 
-    if (status === 201 && data) {
-      form.reset();
-      setIsCreating(false);
+    if (status == 204) {
       setRefreshNow(true);
-      toast.success("Size created successfully");
+      form.reset();
+      setIsUpdating(false);
+      toast.success("Color updated successfully.");
       return;
     }
   };
@@ -80,19 +91,15 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button>
-          <CirclePlus
-            size={16}
-            className=" mr-1"
-          />
-          Add New
-        </Button>
+        <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ">View Details</span>
       </SheetTrigger>
 
       <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
-          <SheetTitle className=" flex items-center gap-2">Create Size  <IconSize  className=" h-4 w-4 text-primary" />  </SheetTitle>
-          <SheetDescription>Insert necessary data and click create size when youre done.</SheetDescription>
+          <SheetTitle className=" flex items-center gap-2">
+            Edit Color <IconColor className=" h-4 w-4 text-primary" />{" "}
+          </SheetTitle>
+          <SheetDescription>Insert necessary data and click edit color when youre done.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -104,10 +111,10 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Size *</FormLabel>
+                  <FormLabel>Color Name *</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="XL"
+                      placeholder="Light Blue"
                       {...field}
                     />
                   </FormControl>
@@ -119,13 +126,14 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
 
             <FormField
               control={form.control}
-              name="description"
+              name="hex"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Color Hex *</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Extra Large"
+                      type="color"
+                      placeholder="#000000"
                       {...field}
                     />
                   </FormControl>
@@ -136,21 +144,21 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
             />
 
             <Button
-              disabled={isCreating}
+              disabled={isUpdating}
               className=" float-end"
               type="submit">
-              {isCreating ? (
+              {isUpdating ? (
                 <Loader
                   size={16}
                   className=" animate-spin mr-1 "
                 />
               ) : (
-                <Save
+                <FilePenLine
                   size={16}
                   className="mr-1 "
                 />
               )}
-              Create Size
+              Save Changes
             </Button>
           </form>
         </Form>

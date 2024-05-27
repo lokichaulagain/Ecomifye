@@ -1,29 +1,21 @@
 "use client";
 import React, { useState } from "react";
-import { CaretSortIcon, ChevronDownIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { CaretSortIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { Badge } from "@/components/ui/badge";
 import SizeCreateSheet from "./SizeCreateSheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { MoreHorizontal } from "lucide-react";
+import { Loader, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import EmptyDataSection from "@/components/custom/empty-data-section";
+import SizeEditSheet from "./SizeEditSheet";
 
-// export type Payment = {
-//   id: string;
-//   amount: number;
-//   status: "pending" | "processing" | "success" | "failed";
-//   email: string;
-// };
-
-export default function SizeDataTable({ setCurrentSizeId,user }: any) {
+export default function SizeDataTable({ user }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -33,7 +25,7 @@ export default function SizeDataTable({ setCurrentSizeId,user }: any) {
   const [sizes, setSizes] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      let { data, error } = await supabase.from("Size").select("*");
+      let { data, error } = await supabase.from("Size").select("*").order("created_at", { ascending: false });
 
       if (error) {
         throw new Error("Failed to fetch sizes");
@@ -42,17 +34,16 @@ export default function SizeDataTable({ setCurrentSizeId,user }: any) {
       if (data) {
         setSizes(data || []);
         setRefreshNow(false);
-        setCurrentSizeId(data[0]?.id);
       }
     };
     fetch();
-  }, [refreshNow, setCurrentSizeId]);
-
-  console.log(sizes);
+  }, [refreshNow]);
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<number>();
   const handleDelete = async (id: number) => {
     try {
+      setDeletingId(id);
       setIsDeleting(true);
       const { error, data, status } = await supabase.from("Size").delete().eq("id", id);
 
@@ -69,7 +60,6 @@ export default function SizeDataTable({ setCurrentSizeId,user }: any) {
     }
   };
 
-  //   const columns: ColumnDef<Payment>[] = [
   const columns: ColumnDef<any>[] = [
     {
       id: "select",
@@ -98,7 +88,7 @@ export default function SizeDataTable({ setCurrentSizeId,user }: any) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Size
+            Size Name
             <CaretSortIcon className="ml-2 h-4 w-4" />
           </Button>
         );
@@ -126,15 +116,16 @@ export default function SizeDataTable({ setCurrentSizeId,user }: any) {
                 variant="ghost"
                 className="h-8 w-8 p-0">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                {deletingId === item.id ? <Loader className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {/* <CategoryEditDialog
-              id={item.id}
-              setRefreshNow={setRefreshNow}
-            /> */}
+
+              <SizeEditSheet
+                id={item.id}
+                setRefreshNow={setRefreshNow}
+              />
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -194,7 +185,10 @@ export default function SizeDataTable({ setCurrentSizeId,user }: any) {
             />
             <DropdownMenu>
               <div className=" flex items-center gap-4">
-                <SizeCreateSheet user={user}/>
+                <SizeCreateSheet
+                  user={user}
+                  setRefreshNow={setRefreshNow}
+                />
 
                 <DropdownMenuTrigger asChild>
                   <Button

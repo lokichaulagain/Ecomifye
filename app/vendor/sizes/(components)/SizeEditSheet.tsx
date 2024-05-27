@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { CirclePlus, Loader, Save } from "lucide-react";
+import { FilePenLine, Loader } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,20 +30,7 @@ const formSchema = z.object({
     .optional(),
 });
 
-export default function SizeCreateSheet({ size, setRefreshNow }: any) {
-  const [loggedInUser, setLoggedInUser] = useState<any>();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      console.log(user, "user");
-      setLoggedInUser(user);
-    };
-    fetchUser();
-  }, []);
-
+export default function SizeEditSheet({ id, setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -52,27 +39,48 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
     },
   });
 
+  const [size, setSize] = useState<any>(undefined);
+  useEffect(() => {
+    const fetch = async () => {
+      const { data, error, status } = await supabase.from("Size").select().eq("id", id).single();
+      if (error) {
+        console.error("Failed to fetch size:", error.message);
+        return;
+      }
+
+      if (status === 200 && data) {
+        setSize(data);
+      }
+    };
+    fetch();
+  }, [id]);
+
+  useEffect(() => {
+    if (size) {
+      form.reset({
+        name: size.name || "",
+        description: size.description || "",
+      });
+    }
+  }, [form, size]);
+
   // Define a submit handler
-  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsCreating(true);
-    const { data, error, status } = await supabase
-      .from("Size")
-      .insert([{ ...values, vendor: loggedInUser?.id }])
-      .select();
+    setIsUpdating(true);
+    const { data, error, status } = await supabase.from("Size").update(values).eq("id", id);
 
     if (error) {
-      toast.error(error.details || "An error occurred during create. Please try again.");
-      console.error("Failed to create size:", error.message);
-      setIsCreating(false);
+      setIsUpdating(false);
+      toast.error(error.details || "An error occurred during update. Please try again.");
       return;
     }
 
-    if (status === 201 && data) {
-      form.reset();
-      setIsCreating(false);
+    if (status == 204) {
       setRefreshNow(true);
-      toast.success("Size created successfully");
+      form.reset();
+      setIsUpdating(false);
+      toast.success("Size updated successfully.");
       return;
     }
   };
@@ -80,19 +88,15 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button>
-          <CirclePlus
-            size={16}
-            className=" mr-1"
-          />
-          Add New
-        </Button>
+        <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ">View Details</span>
       </SheetTrigger>
 
       <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
-          <SheetTitle className=" flex items-center gap-2">Create Size  <IconSize  className=" h-4 w-4 text-primary" />  </SheetTitle>
-          <SheetDescription>Insert necessary data and click create size when youre done.</SheetDescription>
+          <SheetTitle className=" flex items-center gap-2">
+            Edit Size <IconSize className=" h-4 w-4 text-primary" />{" "}
+          </SheetTitle>
+          <SheetDescription>Insert necessary data and click edit size when youre done.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -136,21 +140,21 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
             />
 
             <Button
-              disabled={isCreating}
+              disabled={isUpdating}
               className=" float-end"
               type="submit">
-              {isCreating ? (
+              {isUpdating ? (
                 <Loader
                   size={16}
                   className=" animate-spin mr-1 "
                 />
               ) : (
-                <Save
+                <FilePenLine
                   size={16}
                   className="mr-1 "
                 />
               )}
-              Create Size
+              Save Changes
             </Button>
           </form>
         </Form>

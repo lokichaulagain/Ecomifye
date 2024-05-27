@@ -1,22 +1,21 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { CirclePlus, Loader, Save } from "lucide-react";
+import { FilePenLine, Loader, Upload } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import Image from "next/image";
-import { Upload } from "lucide-react";
-import useCloudinaryFileUpload from "@/hooks/useCloudinaryFileUpload";
-import { Alert, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import Link from "next/link";
 import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
+import Image from "next/image";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import useCloudinaryFileUpload from "@/hooks/useCloudinaryFileUpload";
+import Link from "next/link";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
 const formSchema = z.object({
   name: z
@@ -34,8 +33,7 @@ const formSchema = z.object({
     message: "Active status is required.",
   }),
 });
-
-export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
+export default function CategoryEditSheet({ id, setRefreshNow }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,37 +43,54 @@ export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
     },
   });
 
-  console.log(category);
+  const [category, setCategory] = useState<any>(undefined);
+  useEffect(() => {
+    const fetch = async () => {
+      const { data, error, status } = await supabase.from("Category").select().eq("id", id).single();
+      if (error) {
+        console.error("Failed to fetch category:", error.message);
+        return;
+      }
+
+      if (status === 200 && data) {
+        setCategory(data);
+      }
+    };
+    fetch();
+  }, [id]);
+
+  useEffect(() => {
+    if (category) {
+      form.reset({
+        name: category.name || "",
+        thumbnail: category.thumbnail || "",
+        isActive: category.isActive.toString() || "",
+      });
+    }
+  }, [form, category]);
 
   // Define a submit handler
-  const { uploading, handleFileUpload, imageUrl } = useCloudinaryFileUpload();
   const [previewUrl, setPreviewUrl] = useState("");
-  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const { uploading, handleFileUpload, imageUrl } = useCloudinaryFileUpload();
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!imageUrl) {
-      toast.error("Please upload an image for the category.");
-      return;
-    }
-
-    setIsCreating(true);
+    setIsUpdating(true);
     const { data, error, status } = await supabase
       .from("Category")
-      .insert([{ ...values, thumbnail: imageUrl }])
-      .select();
+      .update({ ...values, thumbnail: imageUrl })
+      .eq("id", id);
 
     if (error) {
-      toast.error(error.details || "An error occurred during create. Please try again.");
-      console.error("Failed to create category:", error.message);
-      setIsCreating(false);
+      setIsUpdating(false);
+      toast.error(error.details || "An error occurred during update. Please try again.");
       return;
     }
 
-    if (status === 201 && data) {
-      form.reset();
-      setPreviewUrl("");
-      setIsCreating(false);
+    if (status == 204) {
       setRefreshNow(true);
-      toast.success("Category created successfully");
+      form.reset();
+      setIsUpdating(false);
+      toast.success("Category updated successfully.");
       return;
     }
   };
@@ -83,21 +98,15 @@ export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button>
-          <CirclePlus
-            size={16}
-            className=" mr-1"
-          />
-          Add New Category
-        </Button>
+        <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 ">View Details</span>
       </SheetTrigger>
 
       <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
           <SheetTitle className=" flex items-center gap-2">
-            Create Category <IconCategory className=" h-4 w-4 text-primary" />{" "}
+            Edit Category <IconCategory className=" h-4 w-4 text-primary" />{" "}
           </SheetTitle>
-          <SheetDescription>Insert necessary data and click create category when youre done.</SheetDescription>
+          <SheetDescription>Insert necessary data and click edit category when youre done.</SheetDescription>
         </SheetHeader>
 
         <Form {...form}>
@@ -129,7 +138,7 @@ export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
                   <FormLabel>Active Status *</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue="">
+                    defaultValue={category?.isActive === true ? "true" : "false"}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select " />
@@ -184,15 +193,13 @@ export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
                         className=" w-full fixed cursor-pointer   z-20 opacity-0"
                       />
 
-                      {previewUrl && (
-                        <Image
-                          src={previewUrl}
-                          alt="Preview"
-                          height={400}
-                          width={400}
-                          className=" object-cover "
-                        />
-                      )}
+                      <Image
+                        src={previewUrl || category?.thumbnail}
+                        alt="Preview"
+                        height={400}
+                        width={400}
+                        className=" object-cover "
+                      />
                     </button>
                   </FormControl>
                   <FormMessage />
@@ -213,21 +220,21 @@ export default function CategoryCreateSheet({ category, setRefreshNow }: any) {
             )}
 
             <Button
-              disabled={uploading || isCreating}
+              disabled={uploading || isUpdating}
               className=" float-end"
               type="submit">
-              {isCreating ? (
+              {isUpdating ? (
                 <Loader
                   size={16}
                   className=" animate-spin mr-1 "
                 />
               ) : (
-                <Save
+                <FilePenLine
                   size={16}
                   className="mr-1"
                 />
               )}
-              Create Category
+              Save Changes
             </Button>
           </form>
         </Form>

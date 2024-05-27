@@ -1,11 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import { CaretSortIcon, ChevronDownIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { CaretSortIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CategoryCreateSheet from "./CategoryCreateSheet";
@@ -13,17 +12,11 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { MoreHorizontal } from "lucide-react";
+import { Loader, MoreHorizontal } from "lucide-react";
 import EmptyDataSection from "@/components/custom/empty-data-section";
+import CategoryEditSheet from "./CategoryEditSheet";
 
-// export type Payment = {
-//   id: string;
-//   amount: number;
-//   status: "pending" | "processing" | "success" | "failed";
-//   email: string;
-// };
-
-export default function CategoryDataTable({ setCurrentCategoryId }: any) {
+export default function CategoryDataTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -33,7 +26,7 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
   const [categories, setCategories] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      let { data, error } = await supabase.from("Category").select("*");
+      let { data, error } = await supabase.from("Category").select("*").order("created_at", { ascending: false })
 
       if (error) {
         throw new Error("Failed to fetch categories");
@@ -42,17 +35,16 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
       if (data) {
         setCategories(data || []);
         setRefreshNow(false);
-        setCurrentCategoryId(data[0]?.id);
       }
     };
     fetch();
-  }, [refreshNow, setCurrentCategoryId]);
-
-  console.log(categories);
+  }, [refreshNow]);
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<number>();
   const handleDelete = async (id: number) => {
     try {
+      setDeletingId(id);
       setIsDeleting(true);
       const { error, data, status } = await supabase.from("Category").delete().eq("id", id);
 
@@ -69,7 +61,6 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
     }
   };
 
-  //   const columns: ColumnDef<Payment>[] = [
   const columns: ColumnDef<any>[] = [
     {
       id: "select",
@@ -103,7 +94,7 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
           </Button>
         );
       },
-      cell: ({ row }) => <div className="lowercase">{row.getValue("name")}</div>,
+      cell: ({ row }) => <div>{row.getValue("name")}</div>,
     },
 
     {
@@ -135,7 +126,7 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
                 variant="ghost"
                 className="h-8 w-8 p-0">
                 <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+                {deletingId === item.id ? <Loader className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -144,10 +135,11 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
               id={item.id}
               setRefreshNow={setRefreshNow}
             /> */}
+            <CategoryEditSheet id={item.id} setRefreshNow={setRefreshNow} />
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete color</span>
+                  <span className=" flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-red-500/90"> Delete Category</span>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -203,7 +195,7 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
             />
             <DropdownMenu>
               <div className=" flex items-center gap-4">
-                <CategoryCreateSheet />
+                <CategoryCreateSheet setRefreshNow={setRefreshNow} />
 
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -247,10 +239,6 @@ export default function CategoryDataTable({ setCurrentCategoryId }: any) {
                 {table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow
-                      // onClick={() => row.toggleSelected()}
-                      onClick={() => {
-                        setCurrentCategoryId(row.original.id);
-                      }}
                       key={row.id}
                       data-state={row.getIsSelected() && "selected"}>
                       {row.getVisibleCells().map((cell) => (
