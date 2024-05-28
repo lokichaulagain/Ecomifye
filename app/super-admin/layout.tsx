@@ -17,12 +17,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const router = useRouter();
+  
   useEffect(() => {
     const fetchSession = async () => {
       const { data, error } = await supabase.auth.getSession();
       console.log(data);
 
-      if (data && data.session?.user?.role !== "super-admin") {
+      if (data && data.session?.user.user_metadata.role !== "super-admin") {
         router.push("/");
         return;
       }

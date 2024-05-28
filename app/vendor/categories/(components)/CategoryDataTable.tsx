@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { CaretSortIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Loader, MoreHorizontal } from "lucide-react";
 import EmptyDataSection from "@/components/custom/empty-data-section";
 import CategoryEditSheet from "./CategoryEditSheet";
+import { CurrentUserContext } from "@/app/context/current-user-context";
 
 export default function CategoryDataTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -22,16 +23,18 @@ export default function CategoryDataTable() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const { currentUser } = useContext<any>(CurrentUserContext);
+
   const [refreshNow, setRefreshNow] = useState(false);
   const [categories, setCategories] = React.useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   React.useEffect(() => {
     setIsFetching(true);
     const fetch = async () => {
-      let { data, error } = await supabase.from("Category").select("*").order("created_at", { ascending: false });
+      let { data, error } = await supabase.from("Category").select("*").eq("vendor", currentUser?.id).order("created_at", { ascending: false });
 
       if (error) {
-        throw new Error("Failed to fetch categories");
+        console.log(error.message);
         setIsFetching(false);
       }
 
@@ -41,8 +44,8 @@ export default function CategoryDataTable() {
         setIsFetching(false);
       }
     };
-    fetch();
-  }, [refreshNow]);
+    currentUser && fetch();
+  }, [currentUser, refreshNow]);
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number>();
@@ -53,7 +56,7 @@ export default function CategoryDataTable() {
       const { error, data, status } = await supabase.from("Category").delete().eq("id", id);
 
       if (error || status !== 204) {
-        throw new Error("Failed to delete category");
+        toast.error("Failed to delete category");
       }
 
       setRefreshNow(true);

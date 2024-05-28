@@ -8,14 +8,13 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/utils/supabase/supabaseClient";
-// import SizeCreateSheet from "./SizeCreateSheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Loader, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import EmptyDataSection from "@/components/custom/empty-data-section";
-import SizeCreateSheet from "@/app/vendor/sizes/(components)/SizeCreateSheet";
 import VendorCreateSheet from "./VendorCreateSheet";
-// import SizeEditSheet from "./SizeEditSheet";
+import { IconBadge } from "@/components/custom/svg-icons/IconBadge";
+import moment from "moment";
 
 export default function VendorDataTable({ user }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -27,18 +26,17 @@ export default function VendorDataTable({ user }: any) {
   const [vendors, setVendors] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      // let { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
-
-      let { data: profiles, error } = await supabase.from("profiles").select("*");
-
-      console.log(profiles);
+      const {
+        data: { users },
+        error,
+      } = await supabase.auth.admin.listUsers();
 
       if (error) {
         throw new Error("Failed to fetch vendors");
       }
 
-      if (profiles) {
-        setVendors(profiles || []);
+      if (users) {
+        setVendors(users || []);
         setRefreshNow(false);
       }
     };
@@ -65,6 +63,7 @@ export default function VendorDataTable({ user }: any) {
       setIsDeleting(false);
     }
   };
+  console.log(vendors);
 
   const columns: ColumnDef<any>[] = [
     {
@@ -103,9 +102,42 @@ export default function VendorDataTable({ user }: any) {
     },
 
     {
-      accessorKey: "role",
+      accessorKey: "user_metadata",
       header: "Vendor Role",
-      cell: ({ row }) => <div>{row.getValue("role")}</div>,
+      cell: ({ row }: any) => (
+        <div className=" capitalize flex  ">
+          {row.getValue("user_metadata")?.role === "vendor" && (
+            <div className="flex items-center gap-1 bg-blue-100 px-2   rounded-full text-[12px]">
+              <IconBadge className="h-3 w-3 text-blue-600" />
+              {row.getValue("user_metadata")?.role}
+            </div>
+          )}
+
+          {row.getValue("user_metadata")?.role === "super-admin" && (
+            <div className="flex items-center gap-1 bg-green-100 px-2   rounded-full text-[12px]">
+              <IconBadge className="h-3 w-3 text-green-600" />
+              {row.getValue("user_metadata")?.role}
+            </div>
+          )}
+        </div>
+      ),
+    },
+
+    {
+      accessorKey: "last_sign_in_at",
+      header: "Last Sign In",
+      cell: ({ row }: any) => (
+        <div className=" ">
+          {/* {moment(row.getValue("last_sign_in_at")).subtract(6, 'days').calendar()} */}
+          {moment(row.getValue("last_sign_in_at")).format("MMMM Do YYYY, h:mm:ss a")}
+        </div>
+      ),
+    },
+
+    {
+      accessorKey: "created_at",
+      header: "Registered At",
+      cell: ({ row }: any) => <div className=" ">{moment(row.getValue("created_at")).format("MMMM Do YYYY, h:mm:ss a")}</div>,
     },
 
     {

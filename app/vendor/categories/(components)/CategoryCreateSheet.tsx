@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { toast } from "sonner";
 import Link from "next/link";
 import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
+import { CurrentUserContext } from "@/app/context/current-user-context";
 
 const formSchema = z.object({
   name: z
@@ -38,6 +39,7 @@ const formSchema = z.object({
 });
 
 export default function CategoryCreateSheet({ category, setRefreshNow, categories }: any) {
+  const { currentUser } = useContext<any>(CurrentUserContext);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -63,7 +65,7 @@ export default function CategoryCreateSheet({ category, setRefreshNow, categorie
     setIsCreating(true);
     const { data, error, status } = await supabase
       .from("Category")
-      .insert([{ ...values, thumbnail: imageUrl }])
+      .insert([{ ...values, thumbnail: imageUrl,vendor:currentUser?.id }])
       .select();
 
     if (error) {

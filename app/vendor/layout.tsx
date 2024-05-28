@@ -15,6 +15,7 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ThemeToggleButton from "@/components/custom/ThemeToggleButton";
+import { CurrentUserContextProvider } from "../context/current-user-context";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -202,7 +203,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </header>
 
-        <div className="flex flex-1  p-4 lg:p-6">{children}</div>
+        <div className="flex flex-1  p-4 lg:p-6">
+          <CurrentUserContextProvider>
+
+          {children}
+          </CurrentUserContextProvider>
+          
+          </div>
       </div>
     </div>
   );

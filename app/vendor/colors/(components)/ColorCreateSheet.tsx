@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "sonner";
 import { IconColor } from "@/components/custom/svg-icons/IconColor";
+import { CurrentUserContext } from "@/app/context/current-user-context";
 
 const formSchema = z.object({
   name: z
@@ -34,6 +35,8 @@ const formSchema = z.object({
 });
 
 export default function ColorCreateSheet({ setRefreshNow }: any) {
+  const { currentUser } = useContext<any>(CurrentUserContext);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,7 +49,10 @@ export default function ColorCreateSheet({ setRefreshNow }: any) {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsCreating(true);
-    const { data, error, status } = await supabase.from("Color").insert([values]).select();
+    const { data, error, status } = await supabase
+      .from("Color")
+      .insert([{ ...values, vendor: currentUser?.id }])
+      .select();
 
     if (error) {
       toast.error(error.details || "An error occurred during create. Please try again.");

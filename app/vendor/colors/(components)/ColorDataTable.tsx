@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { CaretSortIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Loader, MoreHorizontal } from "lucide-react";
 import EmptyDataSection from "@/components/custom/empty-data-section";
 import ColorEditSheet from "./ColorEditSheet";
+import { CurrentUserContext } from "@/app/context/current-user-context";
 
 export default function ColorDataTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -21,17 +22,19 @@ export default function ColorDataTable() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const { currentUser } = useContext<any>(CurrentUserContext);
+
   const [refreshNow, setRefreshNow] = useState(false);
   const [colors, setColors] = React.useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   React.useEffect(() => {
     const fetch = async () => {
       setIsFetching(true);
-      let { data, error } = await supabase.from("Color").select("*").order("created_at", { ascending: false });
+      let { data, error } = await supabase.from("Color").select("*").eq("vendor", currentUser?.id).order("created_at", { ascending: false });
 
       if (error) {
+        console.log(error.message);
         setIsFetching(false);
-        throw new Error("Failed to fetch colors");
       }
 
       if (data) {
@@ -40,8 +43,8 @@ export default function ColorDataTable() {
         setIsFetching(false);
       }
     };
-    fetch();
-  }, [refreshNow]);
+    currentUser && fetch();
+  }, [currentUser, refreshNow]);
 
   console.log(colors);
 
@@ -54,7 +57,7 @@ export default function ColorDataTable() {
       const { error, data, status } = await supabase.from("Color").delete().eq("id", id);
 
       if (error || status !== 204) {
-        throw new Error("Failed to delete color");
+        toast.error("Failed to delete color");
       }
 
       setRefreshNow(true);
@@ -65,8 +68,6 @@ export default function ColorDataTable() {
       setIsDeleting(false);
     }
   };
-
-
 
   const columns: ColumnDef<any>[] = [
     {

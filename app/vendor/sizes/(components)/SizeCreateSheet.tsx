@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "sonner";
 import { IconSize } from "@/components/custom/svg-icons/IconSize";
+import { CurrentUserContext } from "@/app/context/current-user-context";
 
 const formSchema = z.object({
   name: z
@@ -31,18 +32,8 @@ const formSchema = z.object({
 });
 
 export default function SizeCreateSheet({ size, setRefreshNow }: any) {
-  const [loggedInUser, setLoggedInUser] = useState<any>();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      console.log(user, "user");
-      setLoggedInUser(user);
-    };
-    fetchUser();
-  }, []);
+  const { currentUser } = useContext<any>(CurrentUserContext);
+  console.log(currentUser, "currentUser");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,7 +49,7 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
     setIsCreating(true);
     const { data, error, status } = await supabase
       .from("Size")
-      .insert([{ ...values, vendor: loggedInUser?.id }])
+      .insert([{ ...values, vendor: currentUser?.id }])
       .select();
 
     if (error) {
@@ -91,7 +82,9 @@ export default function SizeCreateSheet({ size, setRefreshNow }: any) {
 
       <SheetContent className="sm:max-w-sm">
         <SheetHeader className=" mb-4">
-          <SheetTitle className=" flex items-center gap-2">Create Size  <IconSize  className=" h-4 w-4 text-primary" />  </SheetTitle>
+          <SheetTitle className=" flex items-center gap-2">
+            Create Size <IconSize className=" h-4 w-4 text-primary" />{" "}
+          </SheetTitle>
           <SheetDescription>Insert necessary data and click create size when youre done.</SheetDescription>
         </SheetHeader>
 

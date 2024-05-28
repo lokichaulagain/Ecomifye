@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { CaretSortIcon, ChevronDownIcon } from "@radix-ui/react-icons";
 import { ColumnDef, ColumnFiltersState, SortingState, VisibilityState, flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { Loader, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import EmptyDataSection from "@/components/custom/empty-data-section";
 import SizeEditSheet from "./SizeEditSheet";
+import { CurrentUserContext } from "@/app/context/current-user-context";
 
 export default function SizeDataTable({ user }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -21,17 +22,17 @@ export default function SizeDataTable({ user }: any) {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const { currentUser } = useContext<any>(CurrentUserContext);
   const [refreshNow, setRefreshNow] = useState(false);
   const [sizes, setSizes] = React.useState<any[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   React.useEffect(() => {
     const fetch = async () => {
       setIsFetching(true);
-      let { data, error } = await supabase.from("Size").select("*").order("created_at", { ascending: false });
+      let { data, error } = await supabase.from("Size").select("*").eq("vendor", currentUser?.id).order("created_at", { ascending: false });
 
       if (error) {
-        throw new Error("Failed to fetch sizes");
-        setIsFetching(false);
+        console.log(error.message);
       }
 
       if (data) {
@@ -40,8 +41,8 @@ export default function SizeDataTable({ user }: any) {
         setIsFetching(false);
       }
     };
-    fetch();
-  }, [refreshNow]);
+    currentUser && fetch();
+  }, [currentUser, refreshNow]);
 
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deletingId, setDeletingId] = useState<number>();
@@ -52,7 +53,7 @@ export default function SizeDataTable({ user }: any) {
       const { error, data, status } = await supabase.from("Size").delete().eq("id", id);
 
       if (error || status !== 204) {
-        throw new Error("Failed to delete size");
+        toast.error("Failed to delete size");
       }
 
       setRefreshNow(true);

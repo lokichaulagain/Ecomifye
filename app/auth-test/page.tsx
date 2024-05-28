@@ -10,13 +10,10 @@ export default function page() {
       password: "Password",
       email_confirm: true,
       user_metadata: {
-        // full_name: values.full_name,
-        // username: values.username,
-        // role: values.role,
-        role:"super-admin",
-        email:"superadmin@gmail.com"
+        role: "super-admin",
+        email: "superadmin@gmail.com",
       },
-      role: "super-admin"   // only predefined roles can be assigned
+      role: "super-admin", // only predefined roles can be assigned
     });
   };
 
