@@ -176,10 +176,15 @@ export default function SizeDataTable({ user }: any) {
     },
   });
 
-  if(isFetching){
-    return <div className=" flex items-center justify-center h-full w-full">
-      <Loader size={16} className="animate-spin" />
-    </div>
+  if (isFetching && sizes.length < 1) {
+    return (
+      <div className=" flex items-center justify-center h-full w-full">
+        <Loader
+          size={16}
+          className="animate-spin"
+        />
+      </div>
+    );
   }
 
   return (

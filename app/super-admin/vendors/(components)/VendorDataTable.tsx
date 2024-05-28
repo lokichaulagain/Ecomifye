@@ -27,14 +27,18 @@ export default function VendorDataTable({ user }: any) {
   const [vendors, setVendors] = React.useState<any[]>([]);
   React.useEffect(() => {
     const fetch = async () => {
-      let { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      // let { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+
+      let { data: profiles, error } = await supabase.from("profiles").select("*");
+
+      console.log(profiles);
 
       if (error) {
         throw new Error("Failed to fetch vendors");
       }
 
-      if (data) {
-        setVendors(data || []);
+      if (profiles) {
+        setVendors(profiles || []);
         setRefreshNow(false);
       }
     };

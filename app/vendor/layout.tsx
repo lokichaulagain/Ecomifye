@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Bell, CircleUser, Home, Menu, Package, Package2, Search, ShoppingCart, Users } from "lucide-react";
+import { Bell, CircleUser, Home, Loader, Menu, Package, Package2, Search, ShoppingCart, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { IconSize } from "@/components/custom/svg-icons/IconSize";
 import { IconColor } from "@/components/custom/svg-icons/IconColor";
 import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ThemeToggleButton from "@/components/custom/ThemeToggleButton";
 
@@ -37,6 +37,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
     fetchSession();
   }, [router]);
+
+  const [isLogingOut, seIstLogingOut] = useState<boolean>(false);
+  const handleLogout = async () => {
+    seIstLogingOut(true);
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      toast.error(error.message || "Cound not sign out. Please try again.");
+      seIstLogingOut(false);
+      return;
+    }
+
+    if (!error) {
+      toast.success("You have been signed out successfully.");
+      seIstLogingOut(false);
+      router.push("/");
+      return;
+    }
+  };
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -150,7 +169,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </form>
           </div>
 
-          <ThemeToggleButton/>
+          <ThemeToggleButton />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -167,7 +186,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={isLogingOut}
+                onClick={handleLogout}>
+                {" "}
+                {isLogingOut && (
+                  <Loader
+                    size={14}
+                    className=" me-1 animate-spin"
+                  />
+                )}{" "}
+                Logout
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>

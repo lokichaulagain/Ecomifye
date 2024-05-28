@@ -189,7 +189,7 @@ export default function CategoryDataTable() {
     },
   });
 
-  if (isFetching) {
+  if (isFetching && categories.length < 1) {
     return (
       <div className=" flex items-center justify-center h-full w-full">
         <Loader
