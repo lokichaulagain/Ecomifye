@@ -32,5 +32,5 @@ export default function useCloudinaryFileUpload() {
     }
   };
 
-  return { uploading, handleFileUpload, imageUrl };
+  return { uploading, handleFileUpload, imageUrl,setImageUrl };
 }

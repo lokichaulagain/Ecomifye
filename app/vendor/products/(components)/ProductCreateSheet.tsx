@@ -18,7 +18,7 @@ import Image from "next/image";
 import useCloudinaryMultipleFileUpload from "@/hooks/useCloudinaryMultipleFileUpload";
 import useCloudinaryFileUpload from "@/hooks/useCloudinaryFileUpload";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
 
 const formSchema = z.object({
@@ -42,10 +42,10 @@ const formSchema = z.object({
   length: z.string().optional(),
 
   discountable: z.boolean().default(false),
-  category: z.string().optional(),
+  category: z.coerce.number().nullable(),
   publish: z.boolean().default(false),
 
-  thumbnail: z.string().optional(),
+  thumbnail: z.any(),
 });
 
 export default function ProductCreateSheet({ size, setRefreshNow }: any) {
@@ -53,20 +53,20 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
   console.log(currentUser, "currentUser");
 
   const [previewUrl, setPreviewUrl] = useState("");
-  const { uploading: erer, handleFileUpload, imageUrl } = useCloudinaryFileUpload();
+  const { uploading, handleFileUpload, imageUrl, setImageUrl } = useCloudinaryFileUpload();
   console.log(imageUrl);
 
-  const { uploading, handleMultipleFileUpload, imageUrls } = useCloudinaryMultipleFileUpload();
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  // const { uploading, handleMultipleFileUpload, imageUrls } = useCloudinaryMultipleFileUpload();
+  // const [previewUrls, setPreviewUrls] = useState<string[]>([]);
 
-  const handleMultipleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      handleMultipleFileUpload(files);
-      const previewUrls = Array.from(files).map((file) => URL.createObjectURL(file));
-      setPreviewUrls(previewUrls);
-    }
-  };
+  // const handleMultipleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files;
+  //   if (files) {
+  //     handleMultipleFileUpload(files);
+  //     const previewUrls = Array.from(files).map((file) => URL.createObjectURL(file));
+  //     setPreviewUrls(previewUrls);
+  //   }
+  // };
 
   const [categories, setCategories] = React.useState<any[]>([]);
   React.useEffect(() => {
@@ -99,7 +99,7 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
       length: "",
 
       discountable: false,
-      category: "",
+      category: null,
       publish: false,
 
       thumbnail: "",
@@ -117,7 +117,6 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
 
     if (error) {
       toast.error(error.details || "An error occurred during create. Please try again.");
-      console.error("Failed to create size:", error.message);
       setIsCreating(false);
       return;
     }
@@ -127,6 +126,8 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
       setIsCreating(false);
       setRefreshNow(true);
       toast.success("Product created successfully");
+      setPreviewUrl("");
+      setImageUrl("");
       return;
     }
   };
@@ -143,7 +144,7 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent className=" max-w-sm h-screen overflow-y-scroll">
+      <SheetContent className=" max-w-sm h-screen overflow-y-scroll pb-20">
         <SheetHeader className=" mb-4">
           <SheetTitle className=" flex items-center gap-2">
             Create Product <Package className=" h-4 w-4 text-primary" />{" "}
@@ -221,23 +222,24 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className=" text-foreground/85">Category</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue="">
+                          <FormLabel>Category</FormLabel>
+                          <Select onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select " />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {categories?.map((category) => (
-                                <SelectItem
-                                  key={category.id}
-                                  value={category.id}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
+                              <SelectGroup>
+                                <SelectLabel>Categories</SelectLabel>
+                                {categories?.map((category: any) => (
+                                  <SelectItem
+                                    key={category.id}
+                                    value={category.id.toString()}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
                             </SelectContent>
                           </Select>
 
@@ -263,50 +265,87 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="thumbnail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className=" text-foreground/85">Product Thumbnail *</FormLabel>
-                        <FormControl>
-                          <button
-                            type="button"
-                            className="flex   overflow-hidden h-72   w-full items-center justify-center  rounded-md border border-dashed">
-                            <div className=" absolute bg-primary/20 p-2 rounded-full ">
-                              <Upload className="h-4 w-4 text-primary " />
-                              <span className="sr-only">Upload</span>
-                            </div>
-                            <Input
-                            
-                              onChange={(e: any) => {
-                                field.onChange(e.target.files[0]);
-                                handleFileUpload(e.target.files[0]);
-                                const preview = URL?.createObjectURL(e.target.files[0]);
-                                setPreviewUrl(preview);
-                              }}
-                              type="file"
-                            
-                              className=" w-full fixed cursor-pointer z-50  opacity-0"
-                            />
-
-                            {previewUrl && (
-                              <Image
-                                src={previewUrl}
-                                alt="Preview"
-                                height={300}
-                                width={300}
-                                className=" "
+                    <FormField
+                      control={form.control}
+                      name="thumbnail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className=" text-foreground/85">Product Thumbnail *</FormLabel>
+                          <FormControl>
+                            <button
+                              type="button"
+                              className="flex   overflow-hidden h-60 w-60 mx-auto  items-center justify-center   rounded-md border border-dashed">
+                              <div className=" absolute bg-primary/20 p-2 rounded-full ">
+                                {uploading ? <Loader className=" animate-spin h-4 w-4 text-primary" /> : <Upload className="h-4 w-4 text-primary " />}
+                                <span className="sr-only">Upload</span>
+                              </div>
+                              <Input
+                                onChange={(e: any) => {
+                                  field.onChange(e.target.files[0]);
+                                  handleFileUpload(e.target.files[0]);
+                                  const preview = URL?.createObjectURL(e.target.files[0]);
+                                  setPreviewUrl(preview);
+                                }}
+                                type="file"
+                                className=" w-full absolute  cursor-pointer z-50  opacity-0"
                               />
-                            )}
-                          </button>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+                              {previewUrl && (
+                                <Image
+                                  src={previewUrl}
+                                  alt="Preview"
+                                  height={300}
+                                  width={300}
+                                  className=" "
+                                />
+                              )}
+                            </button>
+                          </FormControl>
+                          <FormMessage />
+                          {uploading && <p className="text-primary  text-[12px] text-center -mt-14">Uploading image please wait...</p>}
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="discountable"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel className=" text-foreground/85">Discountable</FormLabel>
+                            <FormDescription>When unchecked discounts will not be applied to this product.</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="publish"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel className=" text-foreground/85">Publish</FormLabel>
+                            <FormDescription>When unchecked product wont be publish and is stored on draft.</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -322,44 +361,6 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
                           />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="discountable"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel className=" text-foreground/85">Discountable</FormLabel>
-                          <FormDescription>When unchecked discounts will not be applied to this product.</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="publish"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel className=" text-foreground/85">Publish</FormLabel>
-                          <FormDescription>When unchecked product wont be publish and is stored on draft.</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
                       </FormItem>
                     )}
                   />
@@ -484,7 +485,7 @@ export default function ProductCreateSheet({ size, setRefreshNow }: any) {
             </Accordion>
 
             <Button
-              disabled={isCreating}
+              disabled={isCreating || uploading}
               className=" float-end"
               type="submit">
               {isCreating ? (

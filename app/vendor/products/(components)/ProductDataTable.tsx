@@ -8,14 +8,16 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/utils/supabase/supabaseClient";
-// import SizeCreateSheet from "./SizeCreateSheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Loader, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import EmptyDataSection from "@/components/custom/empty-data-section";
-// import SizeEditSheet from "./SizeEditSheet";
 import { CurrentUserContext } from "@/app/context/current-user-context";
 import ProductCreateSheet from "./ProductCreateSheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import IndicatorGreen from "@/components/custom/indicators/indicator-green";
+import IndicatorRed from "@/components/custom/indicators/indicator-red";
+import ProductEditSheet from "./ProductEditSheet";
 
 export default function ProductDataTable({ user }: any) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -88,6 +90,24 @@ export default function ProductDataTable({ user }: any) {
     },
 
     {
+      accessorKey: "thumbnail",
+      header: "Thumbnail",
+      cell: ({ row }) => {
+        return (
+          <>
+            <Avatar className="bg-gray-100 rounded-sm h-8 w-8 object-scale-down ">
+              <AvatarImage
+                src={row.getValue("thumbnail")}
+                alt="category-image"
+              />
+              <AvatarFallback className="  bg-gray-100 rounded-sm h-8 w-8 object-scale-down text-foreground/65 ">NA</AvatarFallback>
+            </Avatar>
+          </>
+        );
+      },
+    },
+
+    {
       accessorKey: "title",
       header: ({ column }) => {
         return (
@@ -103,9 +123,12 @@ export default function ProductDataTable({ user }: any) {
     },
 
     {
-      accessorKey: "subtitle",
-      header: "Subtitle",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("subtitle")}</div>,
+      accessorKey: "publish",
+      header: "Active Status",
+      cell: ({ row }) => {
+        const status = row.getValue("publish");
+        return <>{status ? <IndicatorGreen title="Publish" /> : <IndicatorRed title="Draft" />}</>;
+      },
     },
 
     {
@@ -128,10 +151,11 @@ export default function ProductDataTable({ user }: any) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
-              {/* <SizeEditSheet
+              <ProductEditSheet
                 id={item.id}
                 setRefreshNow={setRefreshNow}
-              /> */}
+                products={products}
+              />
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -195,9 +219,9 @@ export default function ProductDataTable({ user }: any) {
         <div className="w-full">
           <div className="flex items-center justify-between py-4">
             <Input
-              placeholder="Filter names..."
-              value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-              onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+              placeholder="Filter title..."
+              value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+              onChange={(event) => table.getColumn("title")?.setFilterValue(event.target.value)}
               className="max-w-sm"
             />
             <DropdownMenu>

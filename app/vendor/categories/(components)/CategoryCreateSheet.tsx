@@ -11,13 +11,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import Image from "next/image";
 import { Upload } from "lucide-react";
 import useCloudinaryFileUpload from "@/hooks/useCloudinaryFileUpload";
-import { Alert, AlertTitle } from "@/components/ui/alert";
 import { supabase } from "@/utils/supabase/supabaseClient";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import Link from "next/link";
 import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
 import { CurrentUserContext } from "@/app/context/current-user-context";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   name: z
@@ -28,14 +27,9 @@ const formSchema = z.object({
     .max(40, {
       message: "Category Name must be less than 40 characters.",
     }),
-
   thumbnail: z.any(),
-
-  isActive: z.string().min(1, {
-    message: "Active status is required.",
-  }),
-
-  // parentCategory: z.string().optional(),
+  publish: z.boolean().default(false),
+  parent: z.coerce.number().nullable(),
 });
 
 export default function CategoryCreateSheet({ category, setRefreshNow, categories }: any) {
@@ -45,27 +39,20 @@ export default function CategoryCreateSheet({ category, setRefreshNow, categorie
     defaultValues: {
       name: "",
       thumbnail: "",
-      isActive: "",
-      // parentCategory: "",
+      publish: false,
+      parent: null,
     },
   });
 
-  console.log(category);
-
   // Define a submit handler
-  const { uploading, handleFileUpload, imageUrl } = useCloudinaryFileUpload();
+  const { uploading, handleFileUpload, imageUrl, setImageUrl } = useCloudinaryFileUpload();
   const [previewUrl, setPreviewUrl] = useState("");
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!imageUrl) {
-      toast.error("Please upload an image for the category.");
-      return;
-    }
-
     setIsCreating(true);
     const { data, error, status } = await supabase
       .from("Category")
-      .insert([{ ...values, thumbnail: imageUrl,vendor:currentUser?.id }])
+      .insert([{ ...values, thumbnail: imageUrl, vendor: currentUser?.id }])
       .select();
 
     if (error) {
@@ -80,6 +67,7 @@ export default function CategoryCreateSheet({ category, setRefreshNow, categorie
       setPreviewUrl("");
       setIsCreating(false);
       setRefreshNow(true);
+      setImageUrl("");
       toast.success("Category created successfully");
       return;
     }
@@ -128,74 +116,34 @@ export default function CategoryCreateSheet({ category, setRefreshNow, categorie
 
             <FormField
               control={form.control}
-              name="isActive"
+              name="parent"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Active Status *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue="">
+                  <FormLabel>Parent Category</FormLabel>
+                  <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select " />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="true">
-                        <p className=" flex items-center gap-2">
-                          Active <span className="flex w-2 h-2 me-3 bg-green-500 rounded-full"></span>{" "}
-                        </p>
-                      </SelectItem>
-
-                      <SelectItem
-                        value="false"
-                        className=" flex items-center gap-2">
-                        <p className=" flex items-center gap-2">
-                          Inactive <span className="flex w-2 h-2 me-3 bg-red-500 rounded-full"></span>{" "}
-                        </p>
-                      </SelectItem>
+                      <SelectGroup>
+                        <SelectLabel>Categories</SelectLabel>
+                        {categories?.map((category: any) => (
+                          <SelectItem
+                            key={category.id}
+                            value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    Making inactive hides the products that fall under this category.<Link href="/examples/forms">email settings</Link>.
-                  </FormDescription>
+
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            {/* <FormField
-              control={form.control}
-              name="parentCategory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parent Category *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={"1"}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select " />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    <SelectGroup>
-                    <SelectLabel>Categories</SelectLabel>
-                      {categories?.map((category: any) => (
-                        <SelectItem
-                          key={category.id}
-                          value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                 
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
 
             <FormField
               control={form.control}
@@ -206,9 +154,9 @@ export default function CategoryCreateSheet({ category, setRefreshNow, categorie
                   <FormControl>
                     <button
                       type="button"
-                      className="flex   overflow-hidden  aspect-square w-full items-center justify-center  rounded-md border border-dashed">
+                      className="flex   overflow-hidden h-60 w-60 mx-auto  items-center justify-center   rounded-md border border-dashed">
                       <div className=" absolute bg-primary/20 p-2 rounded-full ">
-                        <Upload className="h-4 w-4 text-primary " />
+                        {uploading ? <Loader className=" animate-spin h-4 w-4 text-primary" /> : <Upload className="h-4 w-4 text-primary " />}
                         <span className="sr-only">Upload</span>
                       </div>
                       <Input
@@ -219,36 +167,44 @@ export default function CategoryCreateSheet({ category, setRefreshNow, categorie
                           setPreviewUrl(preview);
                         }}
                         type="file"
-                        className=" w-full fixed cursor-pointer   z-20 opacity-0"
+                        className=" w-full absolute  cursor-pointer   z-50 opacity-0"
                       />
 
                       {previewUrl && (
                         <Image
                           src={previewUrl}
                           alt="Preview"
-                          height={400}
-                          width={400}
-                          className=" object-cover "
+                          height={300}
+                          width={300}
+                          className=""
                         />
                       )}
                     </button>
                   </FormControl>
                   <FormMessage />
+                  {uploading && <p className="text-primary  text-[12px] text-center -mt-14">Uploading image please wait...</p>}
                 </FormItem>
               )}
             />
 
-            {uploading && (
-              <Alert>
-                <AlertTitle className="flex items-center gap-1 text-primary text-xs">
-                  <Loader
-                    size={14}
-                    className=" animate-spin"
-                  />
-                  Uploading Image to cloudinary please wait...
-                </AlertTitle>
-              </Alert>
-            )}
+            <FormField
+              control={form.control}
+              name="publish"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel className=" text-foreground/85">Publish</FormLabel>
+                    <FormDescription>When checked product will be visible in store.</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
             <Button
               disabled={uploading || isCreating}

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { FilePenLine, Loader, Upload } from "lucide-react";
+import { FilePenLine, Loader, Upload, X } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -12,10 +12,9 @@ import { supabase } from "@/utils/supabase/supabaseClient";
 import { toast } from "sonner";
 import { IconCategory } from "@/components/custom/svg-icons/IconCategory";
 import Image from "next/image";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import useCloudinaryFileUpload from "@/hooks/useCloudinaryFileUpload";
-import Link from "next/link";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
 
 const formSchema = z.object({
   name: z
@@ -28,18 +27,17 @@ const formSchema = z.object({
     }),
 
   thumbnail: z.any(),
-
-  isActive: z.string().min(1, {
-    message: "Active status is required.",
-  }),
+  publish: z.boolean().default(false),
+  parent: z.coerce.number().nullable().optional(),
 });
-export default function CategoryEditSheet({ id, setRefreshNow }: any) {
+export default function CategoryEditSheet({ id, setRefreshNow, categories }: any) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       thumbnail: "",
-      isActive: "",
+      publish: false,
+      parent: null,
     },
   });
 
@@ -64,14 +62,17 @@ export default function CategoryEditSheet({ id, setRefreshNow }: any) {
       form.reset({
         name: category.name || "",
         thumbnail: category.thumbnail || "",
-        isActive: category.isActive.toString() || "",
+        publish: category.publish || false,
+        parent: category.parent || null,
       });
     }
   }, [form, category]);
 
   // Define a submit handler
   const [previewUrl, setPreviewUrl] = useState("");
-  const { uploading, handleFileUpload, imageUrl } = useCloudinaryFileUpload();
+  const { uploading, handleFileUpload, imageUrl, setImageUrl } = useCloudinaryFileUpload();
+  console.log(imageUrl);
+
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsUpdating(true);
@@ -87,9 +88,10 @@ export default function CategoryEditSheet({ id, setRefreshNow }: any) {
     }
 
     if (status == 204) {
-      setRefreshNow(true);
       form.reset();
+      setRefreshNow(true);
       setIsUpdating(false);
+      setImageUrl("");
       toast.success("Category updated successfully.");
       return;
     }
@@ -132,38 +134,50 @@ export default function CategoryEditSheet({ id, setRefreshNow }: any) {
 
             <FormField
               control={form.control}
-              name="isActive"
+              name="parent"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Active Status *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={category?.isActive === true ? "true" : "false"}>
+                  <FormLabel>Parent Category</FormLabel>
+                  <Select onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select " />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="true">
-                        <p className=" flex items-center gap-2">
-                          Active <span className="flex w-2 h-2 me-3 bg-green-500 rounded-full"></span>{" "}
-                        </p>
-                      </SelectItem>
-
-                      <SelectItem
-                        value="false"
-                        className=" flex items-center gap-2">
-                        <p className=" flex items-center gap-2">
-                          Inactive <span className="flex w-2 h-2 me-3 bg-red-500 rounded-full"></span>{" "}
-                        </p>
-                      </SelectItem>
+                      <SelectGroup>
+                        <SelectLabel>Categories</SelectLabel>
+                        {categories?.map((category: any) => (
+                          <SelectItem
+                            key={category.id}
+                            value={category.id.toString()}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    Making inactive hides the products that fall under this category.<Link href="/examples/forms">email settings</Link>.
-                  </FormDescription>
+
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="publish"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel className=" text-foreground/85">Publish</FormLabel>
+                    <FormDescription>When checked product will be visible in store.</FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />
@@ -173,15 +187,16 @@ export default function CategoryEditSheet({ id, setRefreshNow }: any) {
               name="thumbnail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category Thumbnail *</FormLabel>
+                  <FormLabel>Category Thumbnail</FormLabel>
                   <FormControl>
                     <button
                       type="button"
-                      className="flex   overflow-hidden  aspect-square w-full items-center justify-center  rounded-md border border-dashed">
+                      className="flex   overflow-hidden  h-60 w-60 mx-auto items-center justify-center  rounded-md border border-dashed">
                       <div className=" absolute bg-primary/20 p-2 rounded-full ">
-                        <Upload className="h-4 w-4 text-primary " />
+                        {uploading ? <Loader className=" animate-spin h-4 w-4 text-primary" /> : <Upload className="h-4 w-4 text-primary " />}
                         <span className="sr-only">Upload</span>
                       </div>
+
                       <Input
                         onChange={(e: any) => {
                           field.onChange(e.target.files[0]);
@@ -190,34 +205,26 @@ export default function CategoryEditSheet({ id, setRefreshNow }: any) {
                           setPreviewUrl(preview);
                         }}
                         type="file"
-                        className=" w-full fixed cursor-pointer   z-20 opacity-0"
+                        className=" w-full absolute cursor-pointer  z-20 opacity-0"
                       />
 
-                      <Image
-                        src={previewUrl || category?.thumbnail}
-                        alt="Preview"
-                        height={400}
-                        width={400}
-                        className=" object-cover "
-                      />
+                      {
+                        <Image
+                          src={previewUrl || category?.thumbnail || ""}
+                          alt="Preview"
+                          height={300}
+                          width={300}
+                        />
+                      }
                     </button>
                   </FormControl>
+                 
                   <FormMessage />
+                
+                  {uploading && <p className="text-primary  text-[12px] text-center -mt-14">Uploading image please wait...</p>}
                 </FormItem>
               )}
             />
-
-            {uploading && (
-              <Alert>
-                <AlertTitle className="flex items-center gap-1 text-primary text-xs">
-                  <Loader
-                    size={14}
-                    className=" animate-spin"
-                  />
-                  Uploading Image to cloudinary please wait...
-                </AlertTitle>
-              </Alert>
-            )}
 
             <Button
               disabled={uploading || isUpdating}

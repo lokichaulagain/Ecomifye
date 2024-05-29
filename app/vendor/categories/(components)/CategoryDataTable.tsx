@@ -9,13 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import CategoryCreateSheet from "./CategoryCreateSheet";
 import { supabase } from "@/utils/supabase/supabaseClient";
-import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Loader, MoreHorizontal } from "lucide-react";
 import EmptyDataSection from "@/components/custom/empty-data-section";
 import CategoryEditSheet from "./CategoryEditSheet";
 import { CurrentUserContext } from "@/app/context/current-user-context";
+import IndicatorGreen from "@/components/custom/indicators/indicator-green";
+import IndicatorRed from "@/components/custom/indicators/indicator-red";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function CategoryDataTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -90,6 +92,24 @@ export default function CategoryDataTable() {
     },
 
     {
+      accessorKey: "thumbnail",
+      header: "Thumbnail",
+      cell: ({ row }) => {
+        return (
+          <>
+            <Avatar className="bg-gray-100 rounded-sm h-8 w-8 object-scale-down ">
+              <AvatarImage
+                src={row.getValue("thumbnail")}
+                alt="category-image"
+              />
+              <AvatarFallback className="  bg-gray-100 rounded-sm h-8 w-8 object-scale-down text-foreground/65 ">NA</AvatarFallback>
+            </Avatar>
+          </>
+        );
+      },
+    },
+
+    {
       accessorKey: "name",
       header: ({ column }) => {
         return (
@@ -105,17 +125,11 @@ export default function CategoryDataTable() {
     },
 
     {
-      accessorKey: "isActive",
+      accessorKey: "publish",
       header: "Active Status",
       cell: ({ row }) => {
-        const status = row.getValue("isActive");
-        return (
-          <Badge
-            className={`
-            ${status ? " bg-green-500/20 text-green-800 hover:bg-green-500/20 hover:text-green-800" : "bg-destructive/20 bg-opacity-10 text-destructive   hover:bg-destructive/20 hover:bg-opacity-10 hover:text-destructive"} rounded-full `}>
-            {row.getValue("isActive") ? "Active" : "Inactive"}
-          </Badge>
-        );
+        const status = row.getValue("publish");
+        return <>{status ? <IndicatorGreen title="Publish" /> : <IndicatorRed title="Draft" />}</>;
       },
     },
 
@@ -138,13 +152,11 @@ export default function CategoryDataTable() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {/* <CategoryEditDialog
-              id={item.id}
-              setRefreshNow={setRefreshNow}
-            /> */}
+
               <CategoryEditSheet
                 id={item.id}
                 setRefreshNow={setRefreshNow}
+                categories={categories}
               />
 
               <AlertDialog>
